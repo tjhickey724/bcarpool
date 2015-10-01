@@ -24,6 +24,7 @@ Template.infoform.events({
 		
 		RideInfo.insert(ride);
 		console.dir([status1,direction,origin,destination]);
+		Router.go('rideinfo');
 
 		/*
 		var x = $("#chatinput").val()
