@@ -1,0 +1,28 @@
+<template name="chat">
+	
+	{{#if currentUser}}
+	<form id="chatform">
+		<input type="text" id="chatinput" placeholder="Enter your chat text here" size="100%">
+	</form>
+	{{else}}
+	You must be signed in to post comments!
+	{{/if}}
+	
+	<h2>Showing the last 10 of {{numchats}} chats</h2>
+  <table class="table table-bordered">
+	  <tbody>
+	{{#each chatlines}}
+	{{> chatitem}}
+	{{/each}}
+</tbody>
+</table>
+
+
+
+</template>
+
+<template name="chatitem">
+	<tr>
+		<td>{{who}} said </td> <td>{{what}}</td><td> at {{when}}</td>
+	</tr>
+</template>

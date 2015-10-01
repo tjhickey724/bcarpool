@@ -1,0 +1,18 @@
+<template name="welcome">
+
+	
+	{{#if currentUser}}
+	{{> rideinfo}}
+	<h2>If you want a ride or offer a ride, fill out the form below!</h2>
+	{{> infoform}}
+	
+	
+	
+	
+	{{else}}
+	You need to register and login first using your brandeis id!
+	{{> loginButtons}}
+	{{/if}}
+
+
+</template>

@@ -1,0 +1,40 @@
+<template name="rideinfo">
+	
+	<h1>Rides to Brandeis</h1>
+	<table class="table table-striped">
+		<thead>
+			<tr><th>Who</th><th>Where</th></tr>
+		</thead>
+		<tbody>
+			{{#each rideto}}
+			{{> ridetorow}}
+			{{/each}}
+		</tbody>
+	</table>
+	
+	
+	
+	
+	<h1>Rides from Brandeis</h1>
+	<table class="table table-striped">
+		<thead>
+			<tr><th>Who</th><th>Where</th></tr>
+		</thead>
+		<tbody>
+			{{#each ridefrom}}
+			{{> ridetorow}}
+			{{/each}}
+		</tbody>
+	</table>
+	
+	
+</template>
+
+
+<template name="ridetorow">
+	<tr>
+		<td>{{who}}</td>
+		<td>{{location}}</td>
+		<td>{{when}}</td>
+	</tr>
+</template>
