@@ -37,6 +37,9 @@
 		<td>{{status1}}</td>
 		<td>{{who}}</td>
 		<td>{{when}}</td>
-		<td>   <span class="glyphicon glyphicon-remove delride" aria-hidden="true"></span> </td>
+		<td> {{#if delete}} 
+				<span class="glyphicon glyphicon-remove delride" aria-hidden="true"></span> 
+			 {{/if}} 
+		 </td>
 	</tr>
 </template>

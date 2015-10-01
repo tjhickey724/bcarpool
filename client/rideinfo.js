@@ -18,3 +18,7 @@ Template.ridetorow.events({
 		RideInfo.remove(this._id);
 	}
 })
+
+Template.ridetorow.helpers({
+	delete:function(){ return this.uid==Meteor.userId() }
+})
