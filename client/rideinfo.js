@@ -9,7 +9,7 @@ Template.rideinfo.helpers({
 			{direction:"from"},
 			{sort:{location:1,status1:1}}
 		)},
-	receive: function(){ return Meteor.userId() == Session.get('sessionId')[1]}
+	//receive: function(){ return Meteor.userId() == Session.get('sessionId')[1]}
 })
 
 Template.ridetorow.events({
@@ -25,8 +25,8 @@ Template.ridetorow.events({
 			sessionId: [Meteor.userId(), this.uid],
 			message: "Can you pick me up?"
 		};
-		Session.set('sessionId', request.sessionId);
-		Request.insert(request);
+		//Session.set('sessionId', request.sessionId);
+		//Request.insert(request);
 		alert("Request sent.");
 	}
 })
