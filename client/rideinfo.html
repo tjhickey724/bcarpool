@@ -1,5 +1,6 @@
 <template name="rideinfo">
 	
+	{{#if isComing}}
 	<h1>Rides to Brandeis</h1>
 	<table class="table table-striped">
 		<thead>
@@ -11,10 +12,10 @@
 			{{/each}}
 		</tbody>
 	</table>
+	{{/if}}
 	
 	
-	
-	
+	{{#if isLeaving}}
 	<h1>Rides from Brandeis</h1>
 	<table class="table table-striped">
 		<thead>
@@ -26,6 +27,7 @@
 			{{/each}}
 		</tbody>
 	</table>
+	{{/if}}
 	
 	
 </template>

@@ -1,19 +1,40 @@
 <template name="infoform">
 	<form id="origin">
+		
+		<div class="row">
+			<div class="col-md-4 ">
 
-		<input type="radio" name="status" value="driver"> I have a car ....
-		<input type="radio" name="status" value="rider"> I need a ride<br>
+		<input type="radio" id="driver" name="driver"> I can offer a ride<br>
+		<input type="radio" id="rider" name="driver"> I need a ride <br>
+		{{#if isDriver}}
+		  I have <select id="numSeats"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select> 
+		  available seats.
+		{{/if}}
+			</div>
+		
+			<div class="col-md-4 col-md-offset-2 ">
+		<input type="radio" id="coming" name="direction"> I am going to Brandeis<br> 
+		<input type="radio" id="leaving" name="direction">I am leaving Brandeis<br>
+		{{#if isLeaving}}
+		and I'm going to <input type="text" name="location" required>
+		{{/if}}
+		{{#if isComing}}
+		and I'm leaving from <input type="text" name="location" required>
+		{{/if}}
+			</div>
+		</div>
+
 		<br>
-		My car has <input type="text" name="carSpace"> space, and <br>
-		<input type="radio" name="direction" value="to"> I'm going to Brandeis soon<br>
-		and I'm starting at <input type="text" name="origin"><br>
-		<br>
-		<input type="radio" name="direction" value="from"> I'm leaving Brandeis soon<br>
-		and I'm going to <input type="text" name="destination"><br>
-		<br>
+		{{#if formComplete}}
 		<input type="submit">
+		<br>
+		<input type="reset" id="reset">
+		{{/if}}
+		
 		
 		
 	</form>
+	
+	{{> rideinfo}}
 </template>
 	

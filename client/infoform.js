@@ -1,16 +1,47 @@
+Session.set("role",null);
+Session.set("direction",null);
+
+Template.infoform.helpers({
+	isDriver:function() {return Session.get("role")=="driver"},
+	isLeaving:function() {return Session.get("direction")=="from"},
+	isComing: function() {return  Session.get("direction")=="to"},
+	formComplete:function(){return Session.get("role")!=null && Session.get("direction")!=null}
+})
+
 Template.infoform.events({
+	"click #reset": function(event){
+		Session.set("role",null);
+		Session.set("direction",null);
+	},
+	"click #driver": function(event){
+		Session.set("role","driver");
+	},
+	"click #rider": function(event){
+		Session.set("role","rider");
+	},
+	"click #leaving": function(event){
+		Session.set("direction","from");
+	},
+	"click #coming": function(event){
+		Session.set("direction","to");
+	},
+	
 	"submit #origin": function(event){
 		
 		event.preventDefault();
-		var carSpace = event.target.carSpace.value;
-		var status1 = event.target.status.value;
-		event.target.status.value=false;
-		var direction = event.target.direction.value;
-		event.target.direction.value="";
-		var origin = event.target.origin.value;
-		event.target.origin.value="";
-		var destination = event.target.destination.value;
-		event.target.destination.value="";
+		if (Session.get("direction")==null || Session.get("role")==null){
+			// generate an error message/warning on the page ...
+			return;
+		}
+		
+		var numSeats=null;
+		if (Session.get("driver"))
+			numSeats = event.target.numSeats.value;
+
+		var location = event.target.location.value;
+		Session.set("currentLocation",location);
+		
+		//event.target.location.value="";
 		var profile = Meteor.user().profile;
 
 		var ride =
@@ -18,17 +49,15 @@ Template.infoform.events({
 				uid:Meteor.userId(),  
 				who:profile["firstName"]+" "+profile["lastName"], 
 				phone:profile["phone"],
-				carSpace:carSpace,
-				status1:status1,
-				direction:direction,
-				location:(direction=="to")?origin:destination,
+				carSpace:numSeats,
+				status1:Session.get("role"),
+				direction:Session.get("direction"),
+				location:location,
 				when: new Date()
 			};
-		
-		Session.set('currentLocation', (direction=="to")?origin:destination)
 		RideInfo.insert(ride);
-		console.dir([status1,direction,origin,destination]);
-		Router.go('rideinfo');
+		console.dir(ride);
+		//Router.go('rideinfo');
 
 		/*
 		var x = $("#chatinput").val()
