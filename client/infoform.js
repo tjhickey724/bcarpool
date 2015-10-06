@@ -2,6 +2,7 @@ Template.infoform.events({
 	"submit #origin": function(event){
 		
 		event.preventDefault();
+		var carSpace = event.target.carSpace.value;
 		var status1 = event.target.status.value;
 		event.target.status.value=false;
 		var direction = event.target.direction.value;
@@ -16,12 +17,15 @@ Template.infoform.events({
 			{				
 				uid:Meteor.userId(),  
 				who:profile["firstName"]+" "+profile["lastName"], 
+				phone:profile["phone"],
+				carSpace:carSpace,
 				status1:status1,
 				direction:direction,
 				location:(direction=="to")?origin:destination,
 				when: new Date()
 			};
 		
+		Session.set('currentLocation', (direction=="to")?origin:destination)
 		RideInfo.insert(ride);
 		console.dir([status1,direction,origin,destination]);
 		Router.go('rideinfo');

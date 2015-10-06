@@ -37,6 +37,11 @@ Accounts.ui.config({
         }],
         visible: true
     }, {
+        fieldName: 'phone',
+        fieldLabel: 'Phone Number',
+        inputType: 'text',
+        visible: true,
+    }, {
         fieldName: 'country',
         fieldLabel: 'Country',
         inputType: 'select',
