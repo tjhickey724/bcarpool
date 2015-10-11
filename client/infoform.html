@@ -7,7 +7,7 @@
 		<input type="radio" id="driver" name="driver"> I can offer a ride<br>
 		<input type="radio" id="rider" name="driver"> I need a ride <br>
 		{{#if isDriver}}
-		  I have <select id="numSeats"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select> 
+		  I have <input type="number" id="numSeats" name="numSeats"> 
 		  available seats.
 		{{/if}}
 			</div>
@@ -34,7 +34,5 @@
 		
 		
 	</form>
-	
-	{{> rideinfo}}
 </template>
 	

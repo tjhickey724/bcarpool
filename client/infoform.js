@@ -1,12 +1,9 @@
-Session.set("role",null);
-Session.set("direction",null);
-
 Template.infoform.helpers({
 	isDriver:function() {return Session.get("role")=="driver"},
 	isLeaving:function() {return Session.get("direction")=="from"},
 	isComing: function() {return  Session.get("direction")=="to"},
 	formComplete:function(){return Session.get("role")!=null && Session.get("direction")!=null}
-})
+});
 
 Template.infoform.events({
 	"click #reset": function(event){
@@ -14,32 +11,32 @@ Template.infoform.events({
 		Session.set("direction",null);
 	},
 	"click #driver": function(event){
-		Session.set("role","driver");
+		Session.setPersistent("role","driver");
 	},
 	"click #rider": function(event){
-		Session.set("role","rider");
+		Session.setPersistent("role","rider");
 	},
 	"click #leaving": function(event){
-		Session.set("direction","from");
+		Session.setPersistent("direction","from");
 	},
 	"click #coming": function(event){
-		Session.set("direction","to");
+		Session.setPersistent("direction","to");
 	},
 	
 	"submit #origin": function(event){
 		
 		event.preventDefault();
+
 		if (Session.get("direction")==null || Session.get("role")==null){
 			// generate an error message/warning on the page ...
 			return;
 		}
 		
 		var numSeats=null;
-		if (Session.get("driver"))
+		if (Session.get("role") == "driver")
 			numSeats = event.target.numSeats.value;
 
 		var location = event.target.location.value;
-		Session.set("currentLocation",location);
 		
 		//event.target.location.value="";
 		var profile = Meteor.user().profile;
@@ -55,9 +52,19 @@ Template.infoform.events({
 				location:location,
 				when: new Date()
 			};
-		RideInfo.insert(ride);
+
+		if (! Meteor.userId()) {
+	      throw new Meteor.Error("not-authorized");
+	    }
+	    if (typeof RideInfo.findOne({uid:Meteor.userId()}, {}) != "undefined")
+			RideInfo.update({_id:RideInfo.findOne({uid:Meteor.userId()}, {})._id}, {$set:ride});
+		else
+			RideInfo.insert(ride);
+
+		Session.setPersistent("rideinfoId", RideInfo.findOne({uid:Meteor.userId()}, {})._id);
 		console.dir(ride);
-		//Router.go('rideinfo');
+		//Meteor.call("insertRideInfo", ride);
+		Router.go('map');
 
 		/*
 		var x = $("#chatinput").val()
@@ -79,4 +86,4 @@ Template.infoform.events({
 		ChatLines.insert(chatline);
 		*/
 	}
-})
+});

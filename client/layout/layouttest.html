@@ -1,0 +1,21 @@
+<template name="layouttest">
+  <div id="slideout-menu">
+    <strong>Menu</strong>
+    <hr />
+    <a href="{{pathFor 'page1'}}">Page 1</a><br />
+    <a href="{{pathFor 'page2'}}">Page 2</a><br />
+  </div>
+  <div id="content">
+    <h1>Welcome to Demo!</h1>
+    {{> yield}}
+  </div>
+</template>
+
+<template name="page1">
+  <button>Click Me</button>
+  <p>You've pressed the button {{counter}} times.</p>
+</template>
+
+<template name="page2">
+  Page 2!  Page 2!  Page 2!  Page 2!  Page 2!  Page 2!  Page 2!  Page 2!  Page 2!
+</template>

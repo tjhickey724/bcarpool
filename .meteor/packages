@@ -11,3 +11,7 @@ iron:router
 twbs:bootstrap
 ian:accounts-ui-bootstrap-3
 accounts-password
+u2622:persistent-session
+dburles:google-maps
+mdg:geolocation
+chriswessels:slideout

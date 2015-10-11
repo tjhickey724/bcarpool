@@ -1,5 +1,6 @@
 accounts-base@1.2.0
 accounts-password@1.1.1
+amplify@1.0.0
 anti:i18n@0.4.3
 autopublish@1.0.3
 autoupdate@1.2.1
@@ -10,6 +11,8 @@ blaze-tools@1.0.3
 boilerplate-generator@1.0.3
 callback-hook@1.0.3
 check@1.0.5
+chriswessels:slideout@0.1.9_2
+dburles:google-maps@1.1.4
 ddp@1.1.0
 deps@1.0.7
 ejson@1.0.6
@@ -36,6 +39,7 @@ launch-screen@1.0.2
 livedata@1.0.13
 localstorage@1.0.3
 logging@1.0.7
+mdg:geolocation@1.0.3
 meteor@1.1.6
 meteor-platform@1.2.2
 minifiers@1.1.5
@@ -61,6 +65,7 @@ stylus@1.0.7
 templating@1.1.1
 tracker@1.0.7
 twbs:bootstrap@3.3.5
+u2622:persistent-session@0.4.3
 ui@1.0.6
 underscore@1.0.3
 url@1.0.4

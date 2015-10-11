@@ -1,4 +1,18 @@
 
+Deps.autorun(function(computation){
+  var currentUser=Meteor.user();
+  if(currentUser){
+    //console.log(Session.get("loggedIn"));
+  }
+  else if(!computation.firstRun){
+    Session.set("role",null);
+    Session.set("direction",null);
+    RideInfo.remove(Session.get("rideinfoId"));
+    Session.set("rideinfoId", null);
+    //console.log(Session.get("loggedIn"));
+  }
+});
+
 Accounts.ui.config({
     requestPermissions: {},
     extraSignupFields: [{

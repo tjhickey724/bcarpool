@@ -1,10 +1,78 @@
+<template name="statusinfo">
+	<h1>Status Info</h1>
+	<table class="table table-striped">
+		<thead>
+			<tr><th>Driver Id</th><th>Rider ID</th><th>Request ID</th><th>Status</th><th>When</th><th>Delete</th></tr>
+		</thead>
+		<tbody>
+			{{#each statuses}}
+			{{> statusrow}}
+			{{/each}}
+		</tbody>
+	</table>
+	
+</template>
+
+<template name="statusrow">
+			<tr>
+				<td>{{driverId}}</td>
+				<td>{{riderId}}</td>
+				<td>{{requestId}}</td>
+				<td>{{theStatus}}</td>
+				<td>{{when}}</td>
+				<td>
+					<span class="glyphicon glyphicon-remove delstatus" aria-hidden="true"></span> 
+				</td>
+			</tr>
+</template>
+
+
+
+
+<template name="requestinfo">
+	
+	{{#if received}}
+	<h1>Request Info</h1>
+	<table class="table table-striped receiving">
+		<thead>
+			<tr><th>sender ID</th><th>Receiver Id</th><th>Message</th><th>Status</th><th>When</th><th>Complete Trip</th><th>Delete</th></tr>
+		</thead>
+		<tbody>
+			{{#each receivedContent}}
+			{{> requestrow}}
+			{{/each}}
+		</tbody>
+	</table>
+	{{/if}}
+	
+</template>
+
+<template name="requestrow">
+			<tr>
+				<td>{{senderId}}</td>
+				<td>{{receiverId}}</td>
+				<td>{{message}}</td>
+				<td>{{theStatus}}</td>
+				<td>{{when}}</td>
+				<td>
+					{{#if shouldShowComplete}}
+					<span class="glyphicon glyphicon-check complete" aria-hidden="true"></span> 
+					{{/if}}
+				</td>
+				<td>
+					<span class="glyphicon glyphicon-remove delrequest" aria-hidden="true"></span> 
+				</td>
+			</tr>
+</template>
+
+
 <template name="rideinfo">
 	
 	{{#if isComing}}
 	<h1>Rides to Brandeis</h1>
 	<table class="table table-striped">
 		<thead>
-			<tr><th>Location</th><th>Status</th><th>Who</th><th>When</th><th>Request</th><th>Call</th><th>Cancel</th></tr>
+			<tr><th>Location</th><th>Status</th><th>Who</th><th>Space</th><th>When</th><th>Request</th><th>Call</th><th>Cancel</th></tr>
 		</thead>
 		<tbody>
 			{{#each rideto}}
@@ -19,7 +87,7 @@
 	<h1>Rides from Brandeis</h1>
 	<table class="table table-striped">
 		<thead>
-			<tr><th>Location</th><th>Status</th><th>Who</th><th>When</th><th>Request</th><th>Call</th><th>Cancel</th></tr>
+			<tr><th>Location</th><th>Status</th><th>Who</th><th>Space</th><th>When</th><th>Request</th><th>Call</th><th>Cancel</th></tr>
 		</thead>
 		<tbody>
 			{{#each ridefrom}}
@@ -38,13 +106,18 @@
 		<td>{{location}}</td>
 		<td>{{status1}}</td>
 		<td>{{who}}</td>
+		<td>{{carSpace}}</td>
 		<td>{{when}}</td>
 		{{#if match}}
 		<td>
+			{{#if shouldShowRequest}}
 			<span class="glyphicon glyphicon-send request" aria-hidden="true"></span>
+			{{/if}}
 		</td>
 		<td>
+			{{#if shouldShowPhone}}
 			<span class="glyphicon glyphicon-earphone call" aria-hidden="true"></span>
+			{{/if}}
 		</td>
 		{{else}}
 		<td></td>
