@@ -8,7 +8,11 @@ Deps.autorun(function(computation){
     Session.set("role",null);
     Session.set("direction",null);
     RideInfo.remove(Session.get("rideinfoId"));
+    Geolocations.remove(Session.get("geolocInfoId"));
     Session.set("rideinfoId", null);
+    Session.set("geolocInfoId", null);
+    Session.set("ride", null);
+    Session.set("submitted", false);
     //console.log(Session.get("loggedIn"));
   }
 });

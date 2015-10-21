@@ -24,6 +24,7 @@ Template.infoform.events({
 	},
 	
 	"submit #origin": function(event){
+		Session.setPersistent("submitted", true);
 		
 		event.preventDefault();
 
@@ -36,7 +37,7 @@ Template.infoform.events({
 		if (Session.get("role") == "driver")
 			numSeats = event.target.numSeats.value;
 
-		var location = event.target.location.value;
+		//var location = event.target.location.value;
 		
 		//event.target.location.value="";
 		var profile = Meteor.user().profile;
@@ -49,19 +50,23 @@ Template.infoform.events({
 				carSpace:numSeats,
 				status1:Session.get("role"),
 				direction:Session.get("direction"),
-				location:location,
+				destGeoloc:null,
+				destAddress:null,
 				when: new Date()
 			};
 
 		if (! Meteor.userId()) {
 	      throw new Meteor.Error("not-authorized");
 	    }
-	    if (typeof RideInfo.findOne({uid:Meteor.userId()}, {}) != "undefined")
-			RideInfo.update({_id:RideInfo.findOne({uid:Meteor.userId()}, {})._id}, {$set:ride});
-		else
-			RideInfo.insert(ride);
 
-		Session.setPersistent("rideinfoId", RideInfo.findOne({uid:Meteor.userId()}, {})._id);
+	    if (typeof RideInfo.findOne({uid:Meteor.userId()}, {}) != "undefined")
+           RideInfo.update({_id:RideInfo.findOne({uid:Meteor.userId()}, {})._id}, {$set:ride});
+        else
+           RideInfo.insert(ride);
+
+        Session.setPersistent("rideinfoId", RideInfo.findOne({uid:Meteor.userId()}, {})._id);
+
+		Session.setPersistent("ride", ride);
 		console.dir(ride);
 		//Meteor.call("insertRideInfo", ride);
 		Router.go('map');

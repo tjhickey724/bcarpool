@@ -128,13 +128,13 @@ Template.rideinfo.helpers({
 		return RideInfo.find(
 			{direction:"to"},
 			
-			{sort:{location:1,status1:1,when:-1}}
+			{sort:{destAddress:1,status1:1,when:-1}}
 		)},
 	ridefrom: function(){
 		return RideInfo.find(
 			{direction:"from"},
 			
-			{sort:{location:1,status1:1,when:-1}}
+			{sort:{destAddress:1,status1:1,when:-1}}
 		)},
 	//receive: function(){ return Meteor.userId() == Session.get('sessionId')[1]}
 })

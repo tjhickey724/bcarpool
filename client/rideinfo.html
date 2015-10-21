@@ -72,7 +72,7 @@
 	<h1>Rides to Brandeis</h1>
 	<table class="table table-striped">
 		<thead>
-			<tr><th>Location</th><th>Status</th><th>Who</th><th>Space</th><th>When</th><th>Request</th><th>Call</th><th>Cancel</th></tr>
+			<tr><th>Address</th><th>Status</th><th>Who</th><th>Space</th><th>When</th><th>Request</th><th>Call</th><th>Cancel</th></tr>
 		</thead>
 		<tbody>
 			{{#each rideto}}
@@ -87,7 +87,7 @@
 	<h1>Rides from Brandeis</h1>
 	<table class="table table-striped">
 		<thead>
-			<tr><th>Location</th><th>Status</th><th>Who</th><th>Space</th><th>When</th><th>Request</th><th>Call</th><th>Cancel</th></tr>
+			<tr><th>Address</th><th>Status</th><th>Who</th><th>Space</th><th>When</th><th>Request</th><th>Call</th><th>Cancel</th></tr>
 		</thead>
 		<tbody>
 			{{#each ridefrom}}
@@ -103,7 +103,7 @@
 
 <template name="ridetorow">
 	<tr>
-		<td>{{location}}</td>
+		<td>{{destAddress}}</td>
 		<td>{{status1}}</td>
 		<td>{{who}}</td>
 		<td>{{carSpace}}</td>

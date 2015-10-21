@@ -7,7 +7,7 @@
 		<input type="radio" id="driver" name="driver"> I can offer a ride<br>
 		<input type="radio" id="rider" name="driver"> I need a ride <br>
 		{{#if isDriver}}
-		  I have <input type="number" id="numSeats" name="numSeats"> 
+		  I have <input type="number" id="numSeats" name="numSeats" required> 
 		  available seats.
 		{{/if}}
 			</div>
@@ -15,12 +15,7 @@
 			<div class="col-md-4 col-md-offset-2 ">
 		<input type="radio" id="coming" name="direction"> I am going to Brandeis<br> 
 		<input type="radio" id="leaving" name="direction">I am leaving Brandeis<br>
-		{{#if isLeaving}}
-		and I'm going to <input type="text" name="location" required>
-		{{/if}}
-		{{#if isComing}}
-		and I'm leaving from <input type="text" name="location" required>
-		{{/if}}
+		
 			</div>
 		</div>
 

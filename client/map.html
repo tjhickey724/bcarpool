@@ -1,13 +1,18 @@
-<template name="map">  
-  <div class="map-container">
+<template name="map">
+  {{#if shouldShowMap}}
+  <body>
+  <div class="map-container" id="soso">
     {{#unless geolocationError}}
+      <input id="pac-input" class="controls" type="text" placeholder="Search Box">
       {{> googleMap name="map" options=mapOptions}}
     {{else}}
       Geolocation failed: {{geolocationError}}
     {{/unless}}
   </div>
-  	{{> statusinfo}}
+  </body>
+  {{> statusinfo}}
 	{{> requestinfo}}
 	
 	{{> rideinfo}}
+  {{/if}}
 </template>
