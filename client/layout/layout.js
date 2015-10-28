@@ -1,5 +1,5 @@
 Template.layout.helpers({
-	shouldShowMap: function(){
+	shouldShowMapTab: function(){
 		return (Meteor.userId() && Session.get("submitted"))?true:false;
 	}
 });
