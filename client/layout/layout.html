@@ -1,47 +1,87 @@
 
 <template name="layout">
-	<div class="container">
-		<h1 class="text-center"> Brandeis Carpool App</h1>
-		
-		<!-- Here is the standard Bootstrap code for a Navigation bar taken directly from getbootstrap.com/components -->
-		<nav class="navbar navbar-default">
-		  <div class="container-fluid">
-		    <!-- Brand and toggle get grouped for better mobile display -->
-		    <div class="navbar-header">
-		      <button type="button" class="navbar-toggle collapsed" 
-			  			data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-		        <span class="sr-only">Toggle navigation</span>
-		        <span class="icon-bar"></span>
-		        <span class="icon-bar"></span>
-		        <span class="icon-bar"></span>
-		      </button>
-		      <a class="navbar-brand" href="{{pathFor 'welcome'}}">Home</a>
-		    </div>
+    <div id="wrapper">
+        <div class="overlay"></div>
+    
+        <!-- Sidebar -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" id="sidebar-wrapper" role="navigation">
+            <ul class="nav sidebar-nav">
+                <li class="sidebar-brand">
+                    <a href="#">
+                       Brandeis Carpool
+                    </a>
+                </li>
+                <!--
+                <li>
+                	{{> loginButtons}}
+                </li>
+            	-->
+            	<li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ userName }} <span class="caret"></span></a>
+                  <ul class="dropdown-menu" role="menu">
+                    <li class="dropdown-header">Options</li>
+                    <li><a href="#" class="logout">Logout</a></li>
+                  </ul>
+                </li>
+                <li>
+                	<a class="navbar-brand" href="{{pathFor 'welcome'}}">Home</a>
+                </li>
+                <li>
+                    <a href="{{pathFor 'about'}}">About</a>
+                </li>
+             
+                 {{#if shouldShowMapTab}}
+				<li>
+					<a href="{{pathFor 'map'}}">Map</a>
+				</li>
+				{{/if}}
+                {{#if shouldShowTripTab}}
+				<li>
+					<a href="{{pathFor 'tripinfo'}}">Trip</a>
+				</li>
+				{{/if}}
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Works <span class="caret"></span></a>
+                  <ul class="dropdown-menu" role="menu">
+                    <li class="dropdown-header">Dropdown heading</li>
+                    <li><a href="#">Action</a></li>
+                    <li><a href="#">Another action</a></li>
+                    <li><a href="#">Something else here</a></li>
+                    <li><a href="#">Separated link</a></li>
+                    <li><a href="#">One more separated link</a></li>
+                  </ul>
+                </li>
+                <li>
+                    <a href="#">Services</a>
+                </li>
+                <li>
+                    <a href="#">Contact</a>
+                </li>
+                <li>
+                    <a href="https://twitter.com/maridlcrmn">Follow me</a>
+                </li>
+            </ul>
+        </nav>
+        <!-- /#sidebar-wrapper -->
 
-		    <!-- Collect the nav links, forms, and other content for toggling -->
-		    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-		      	<ul class="nav navbar-nav">
-					<li><a href="{{pathFor 'about'}}">About</a></li>
-					{{#if shouldShowMapTab}}
-					<li><a href="{{pathFor 'map'}}">Map</a></li>
-					{{/if}}
-					<li><a href="{{pathFor 'tripinfo'}}">Trip</a></li>
-					<!--
-					<li><a href="{{pathFor 'rideinfo'}}">RideInfo</a></li>
-					<li><a href="{{pathFor 'chat'}}">Chat</a></li>
-						-->
-				</ul>			
-
-				<ul class="nav navbar-nav navbar-right">
-			            {{> loginButtons}} <!-- here -->
-				</ul>
-					    </div><!-- /.navbar-collapse -->
-		  </div><!-- /.container-fluid -->
-		</nav>
-		
-		<!-- Here is where the actual content of the page gets inserted by the router! -->
-		{{> yield}}
-		
-	</div>
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+        	<button type="button" class="hamburger is-closed" data-toggle="offcanvas">
+                <span class="hamb-top"></span>
+    			<span class="hamb-middle"></span>
+				<span class="hamb-bottom"></span>
+            </button>
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-8 col-lg-offset-2">                        
+                    </div>
+                </div>
+            </div>
+        </div>
+  </div>
+  {{> yield}}
 </template>
+
+
+
 

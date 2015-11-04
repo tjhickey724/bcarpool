@@ -7,6 +7,7 @@ Deps.autorun(function(computation){
   else if(!computation.firstRun){
     Session.set("role",null);
     Session.set("direction",null);
+    Session.set("numSeats", null);
     RideInfo.remove(Session.get("rideinfoId"));
     Geolocations.remove(Session.get("geolocInfoId"));
     Session.set("rideinfoId", null);
@@ -16,6 +17,8 @@ Deps.autorun(function(computation){
     //console.log(Session.get("loggedIn"));
   }
 });
+
+/*
 
 Accounts.ui.config({
     requestPermissions: {},
@@ -75,4 +78,5 @@ Accounts.ui.config({
         }
     }]
 });
+*/
 

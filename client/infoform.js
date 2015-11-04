@@ -1,3 +1,29 @@
+Template.infoform.rendered = function(){
+	$('body').removeClass('login-body');
+	$('a[title]').tooltip();
+
+    $('.btn-submit').on('click', function(e) {
+
+        var formname = $(this).attr('name'); 
+        var tabname = $(this).attr('href');
+        
+        if ($('#' + formname)[0].checkValidity()) { /* Only works in Firefox/Chrome need polyfill for IE9, Safari. http://afarkas.github.io/webshim/demos/ */
+            e.preventDefault();
+            $('ul.nav li a[href="' + tabname + '"]').parent().removeClass('disabled');
+            $('ul.nav li a[href="' + tabname + '"]').trigger('click');
+        }
+
+    });
+
+    $('ul.nav li').on('click', function(e) {
+        if ($(this).hasClass('disabled')) {
+            e.preventDefault();
+            return false;
+        }
+    });
+}
+
+
 Template.infoform.helpers({
 	isDriver:function() {return Session.get("role")=="driver"},
 	isLeaving:function() {return Session.get("direction")=="from"},
@@ -22,8 +48,13 @@ Template.infoform.events({
 	"click #coming": function(event){
 		Session.setPersistent("direction","to");
 	},
-	
-	"submit #origin": function(event){
+	"click #role_submit": function(event){
+		if (Session.get("role") == "driver"){
+			Session.setPersistent("numSeats", $("#numSeats").val());
+		}
+	},
+	"click #complete_submit": function(event){
+		console.log("submitted");
 		Session.setPersistent("submitted", true);
 		
 		event.preventDefault();
@@ -32,10 +63,6 @@ Template.infoform.events({
 			// generate an error message/warning on the page ...
 			return;
 		}
-		
-		var numSeats=null;
-		if (Session.get("role") == "driver")
-			numSeats = event.target.numSeats.value;
 
 		//var location = event.target.location.value;
 		
@@ -47,7 +74,7 @@ Template.infoform.events({
 				uid:Meteor.userId(),  
 				who:profile["firstName"]+" "+profile["lastName"], 
 				phone:profile["phone"],
-				carSpace:numSeats,
+				carSpace:Session.get("numSeats"),
 				status1:Session.get("role"),
 				direction:Session.get("direction"),
 				destGeoloc:null,

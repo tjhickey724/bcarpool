@@ -5,7 +5,17 @@ Meteor.startup(function() {
   //Geolocations._ensureIndex({loc: "2dsphere"})
 });
 
+Statuses.find().observeChanges({
+	added: function(id, object) {
+		Session.setPersistent("shouldShowTrip", true);
+	},
 
+	changed: function(id, object) {
+		if(object.theStatus == "completed"){
+			Session.setPersistent("shouldShowTrip", false);
+		}
+	}
+});
 
 var cursor = Requests.find();
 cursor.observeChanges({
@@ -24,7 +34,6 @@ cursor.observeChanges({
 								theStatus: "riding",
 								when: new Date()
 							};
-							var driverInfo = RideInfo.findOne({uid: object.receiverId}, {});
 						} else {
 							var sts = {
 								requestId: id,
@@ -33,14 +42,16 @@ cursor.observeChanges({
 								theStatus: "riding",
 								when: new Date()
 							};
-							var driverInfo = RideInfo.findOne({uid: object.senderId}, {});
+							//var driverInfo = RideInfo.findOne({uid: object.senderId}, {});
 						}
 						Statuses.insert(sts);
 
+						/*
 						var driverId = driverInfo._id;
 							delete driverInfo['_id'];
 							driverInfo.carSpace -= 1;
 							RideInfo.update({_id:driverId}, {$set:driverInfo});
+						*/
 
 					} else {
 						object.theStatus = "rejected";
@@ -201,19 +212,22 @@ function ridetorowEvents(rowInfo){
 		if (rowInfo.status1 == "driver") {
 			msg = "Can you pick me up?";
 			senderIsRider = true;
+			var driverInfo = RideInfo.findOne({uid: rowInfo.uid}, {});
 		} else if (rowInfo.status1 == "rider") {
 			msg = "I want to pick you up.";
 			senderIsRider = false;
 			var driverInfo = RideInfo.findOne({uid: Meteor.userId()}, {});
-			if (driverInfo.carSpace > 0) {
-				driverInfo.carSpace -= 1;
-			} else {
-				driverInfo.carSpace = 0;
-			}
-			var driverId = driverInfo._id;
-			delete driverInfo["_id"];
-			RideInfo.update({_id: driverId}, {$set:driverInfo});
 		}
+			
+		if (driverInfo.carSpace > 0) {
+			driverInfo.carSpace -= 1;
+		} else {
+			driverInfo.carSpace = 0;
+		}
+		var driverId = driverInfo._id;
+		delete driverInfo["_id"];
+		RideInfo.update({_id: driverId}, {$set:driverInfo});
+
 		var request = {
 			senderId: Meteor.userId(),
 			receiverId: rowInfo.uid,
@@ -328,19 +342,22 @@ Template.ridetorow.events({
 		if (this.status1 == "driver") {
 			msg = "Can you pick me up?";
 			senderIsRider = true;
+			var driverInfo = RideInfo.findOne({uid: this.uid}, {});
 		} else if (this.status1 == "rider") {
 			msg = "I want to pick you up.";
 			senderIsRider = false;
 			var driverInfo = RideInfo.findOne({uid: Meteor.userId()}, {});
-			if (driverInfo.carSpace > 0) {
-				driverInfo.carSpace -= 1;
-			} else {
-				driverInfo.carSpace = 0;
-			}
-			var driverId = driverInfo._id;
-			delete driverInfo["_id"];
-			RideInfo.update({_id: driverId}, {$set:driverInfo});
 		}
+		
+		if (driverInfo.carSpace > 0) {
+			driverInfo.carSpace -= 1;
+		} else {
+			driverInfo.carSpace = 0;
+		}
+		var driverId = driverInfo._id;
+		delete driverInfo["_id"];
+		RideInfo.update({_id: driverId}, {$set:driverInfo});
+
 		var request = {
 			senderId: Meteor.userId(),
 			receiverId: this.uid,
@@ -452,10 +469,28 @@ Template.map.helpers({
 });
 
 
+Template.map.rendered = function(){
+	//$('body').css('height', '100%');
+	//$('body').css('width', '100%');
+	//$('body').css('margin', 0);
+	//$('body').css('padding', 0);
+	//$('#map-canvas').css('position', 'relative');
+}
+
+
 Template.map.onCreated(function() {  
   var self = this;
 
   GoogleMaps.ready('map', function(map) {
+  	/* Central Button */
+  	self.find('.material-button-toggle').addEventListener('click', function(){
+	  	this.classList.toggle('open');
+	  	var options = document.getElementsByClassName('option');
+	  	for (var i = 0; i < options.length; i++){
+	  		options[i].classList.toggle('scale-on');
+	  	}
+	  });
+  	
     var locmarkers = [];
     var destpins = [];
     var infowindow = new google.maps.InfoWindow({
@@ -463,6 +498,8 @@ Template.map.onCreated(function() {
                 });
 
     var input = self.find("#pac-input");
+    var circle_menu = self.find("#circle-menu");
+    map.instance.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(circle_menu);
 
     var searchBox = new google.maps.places.SearchBox(input);
     map.instance.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
@@ -498,7 +535,9 @@ Template.map.onCreated(function() {
       // Create call button
 
       // push buttons on map
-   	map.instance.controls[google.maps.ControlPosition.TOP_LEFT].push(finalizeButtonDiv);
+    if(Session.get("role") == "driver"){
+   		map.instance.controls[google.maps.ControlPosition.TOP_LEFT].push(finalizeButtonDiv);
+   	}
 
 
    	function FinalizeButton(controlDiv, map) {
@@ -512,6 +551,8 @@ Template.map.onCreated(function() {
           console.log("click");
           RideInfo.remove(RideInfo.findOne({uid: Meteor.userId()}, {})._id);
           Geolocations.remove(Geolocations.findOne({uid: Meteor.userId()}, {})._id);
+          Router.go("welcome");
+          Session.setPersistent("submitted", false);
           /*
           if(Session.get("role") == "rider"){
             destpins.forEach(function(destpin, index){
@@ -827,16 +868,19 @@ Template.map.onCreated(function() {
             google.maps.event.addListener(marker, 'click', function(){
               infowindow.setContent(this.html);
               infowindow.open(map.instance, this);
-              if(this.role == "rider"){
+              //if(this.role == "rider"){
               	var selfMarker = this;
-                self.find("#request").addEventListener('click', function(){
-                  var events = new ridetorowEvents(selfMarker.ride);
-                  events.clickRequest();
-                  var callButtonDiv = document.createElement('button');
-      			  var callButton = new CallButton(callButtonDiv, map.instance, selfMarker.ride);
-      			  map.instance.controls[google.maps.ControlPosition.TOP_LEFT].push(callButtonDiv);
-                });
-              }
+              	if (self.find("#request")) {
+	                self.find("#request").addEventListener('click', function(){
+	                  var events = new ridetorowEvents(selfMarker.ride);
+	                  console.log("request");
+	                  events.clickRequest();
+	                  var callButtonDiv = document.createElement('button');
+	      			  var callButton = new CallButton(callButtonDiv, map.instance, selfMarker.ride);
+	      			  map.instance.controls[google.maps.ControlPosition.TOP_LEFT].push(callButtonDiv);
+	                });
+	            }
+              //}
             });
           });
       }
