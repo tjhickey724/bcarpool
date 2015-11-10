@@ -1,44 +1,12 @@
 <template name="infoform">
-	<!--
-	<form id="origin">
-		
-		<div class="row">
-			<div class="col-md-4 ">
 
-		<input type="radio" id="driver" name="driver"> I can offer a ride<br>
-		<input type="radio" id="rider" name="driver"> I need a ride <br>
-		{{#if isDriver}}
-		  I have <input type="number" id="numSeats" name="numSeats" required> 
-		  available seats.
-		{{/if}}
-			</div>
-		
-			<div class="col-md-4 col-md-offset-2 ">
-		<input type="radio" id="coming" name="direction"> I am going to Brandeis<br> 
-		<input type="radio" id="leaving" name="direction">I am leaving Brandeis<br>
-		
-			</div>
-		</div>
-
-		<br>
-		{{#if formComplete}}
-		<input type="submit">
-		<br>
-		<input type="reset" id="reset">
-		{{/if}}
-		
-		
-		
-	</form>
-	-->
-
-
-
+  {{#ionView}}
+    {{#ionContent}}
+ <!-- 
 	<section style="background:#efefe9;">
         <div class="container">
             <div class="row">
                 <div class="board">
-                    <!-- <h2>Welcome to IGHALO!<sup>™</sup></h2>-->
                     <div class="board-inner">
                     <ul class="nav nav-tabs" id="myTab">
                     <div class="liner"></div>
@@ -127,7 +95,87 @@
 		</div>
 		</div>
 </section>
+-->
+
+    <div class="list">
+
+    <label class="item item-radio">
+      <input type="radio" name="role" id="driver">
+      <div class="item-content ion-model-s">
+        I can offer a ride
+      </div>
+      <i class="radio-icon ion-checkmark"></i>
+    </label>
+    <label class="item item-radio">
+      <input type="radio" name="role" id="rider">
+      <div class="item-content ion-man">
+        &nbsp; I need a ride
+      </div>
+      <i class="radio-icon ion-checkmark"></i>
+    </label>
+
+     <label class="item item-input">
+      <input type="number" id="numSeats" name="numSeats" placeholder="Seats Available" required>
+    </label>
 
 
+  </div>
+  <a class="button button-large button-positive button-block" id="role-next" href="{{pathFor 'where'}}">Confirm & Next</a>
+  {{/ionContent}}
+  {{/ionView}}
+
+</template>
+
+
+<template name="where">
+  {{#contentFor "headerButtonLeft"}}
+    {{>ionNavBackButton path="welcome"}}
+  {{/contentFor}}
+
+  {{#contentFor "headerTitle"}}
+    <h1 class="title ion-location">&nbsp;Which Direction To Go?</h1>
+  {{/contentFor}}
+
+  {{#ionView}}
+    {{#ionContent}}
+      <div class="list">
+
+      <label class="item item-radio">
+        <input type="radio" name="direction" id="coming">
+        <div class="item-content ion-university">
+          I am going to Brandeis
+        </div>
+        <i class="radio-icon ion-checkmark"></i>
+      </label>
+      <label class="item item-radio">
+        <input type="radio" name="direction" id="leaving">
+        <div class="item-content ion-ios-home">
+          I am leaving Brandeis
+        </div>
+        <i class="radio-icon ion-checkmark"></i>
+      </label>
+
+    </div>
+    <a class="button button-medium button-positive button-block" id="complete-info" href="{{pathFor 'done'}}">Complete</a>
+    {{/ionContent}}
+  {{/ionView}}
+</template>
+
+<template name="done">
+  {{#contentFor "headerButtonLeft"}}
+    {{>ionNavBackButton path="where"}}
+  {{/contentFor}}
+
+  {{#contentFor "headerTitle"}}
+    <h1 class="title">Completed</h1>
+  {{/contentFor}}
+
+  {{#ionView}}
+    {{#ionContent}}
+      <h1>Thank you for completing the information!</h1>
+      <h3>Now you can go to map view!</h3>
+      <a class="button button-medium button-positive button-block" href="{{pathFor 'map'}}">Go To Map</a>
+    {{/ionContent}}
+  {{/ionView}}
 </template>
 	

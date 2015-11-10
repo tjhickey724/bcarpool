@@ -10,7 +10,7 @@
     padding: 0;
     margin: 0;
 }
-
+/*
 .wrap
 {
     width: 100%;
@@ -184,7 +184,7 @@ form.login a:hover
     padding: 10px;
     left: 45%;
 }
-
+*/
 
 
 
@@ -695,6 +695,9 @@ height: 500px;
 background: #fff;
 /*box-shadow: 10px 10px #ccc,-10px 20px #ddd;*/
 }
+
+
+
 .board .nav-tabs {
     position: relative;
     /* border-bottom: 0; */
@@ -1004,4 +1007,3 @@ left: 35%;
     border-color: #5cb85c; }
 .radio-success input[type="radio"]:checked + label::after {
     background-color: #5cb85c; }
-

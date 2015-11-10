@@ -18,6 +18,54 @@ Deps.autorun(function(computation){
   }
 });
 
+
+AccountsTemplates.configure({
+  negativeValidation: false,
+  negativeFeedback: false,
+  positiveValidation: false,
+  positiveFeedback: false,
+  homeRoutePath: '/welcome',
+});
+
+AccountsTemplates.addField({
+    _id: "firstName",
+    type: "text",
+    displayName: "First Name",
+    required: true,
+});
+
+AccountsTemplates.addField({
+    _id: "lastName",
+    type: "text",
+    displayName: "Last Name",
+    required: true,
+});
+
+
+AccountsTemplates.addField({
+    _id: "gender",
+    type: "radio",
+    displayName: "Gender",
+    select: [
+        {
+            text: "Male",
+            value: "m",
+        },
+        {
+            text: "Female",
+            value: "f",
+        },
+    ],
+    required: true,
+});
+
+AccountsTemplates.addField({
+    _id: "phone",
+    type: "text",
+    displayName: "Phone",
+    required: true,
+});
+
 /*
 
 Accounts.ui.config({

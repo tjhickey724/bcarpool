@@ -1,15 +1,39 @@
 <template name="welcome">
+	         {{#contentFor "headerButtonLeft"}}
+              <button class="button button-clear pull-left" data-ion-menu-toggle="left">
+                {{#if isAndroid}}
+                  {{> ionIcon icon='android-more-vertical'}}
+                {{else}}
+                  {{> ionIcon icon='navicon'}}
+                {{/if}}
+              </button>
+            {{/contentFor}}
+            {{#contentFor "headerTitle"}}
+              <h1 class="title">Bcarpool</h1>
+            {{/contentFor}}
 
-	{{#if currentUser}}
+            {{#ionView}}
+              {{#ionContent}}
+                  <!-- Main Content Here -->
+                  <!--
+                  <a href="{{pathFor 'index'}}" class="button button-large button-stable" data-nav-direction="back">
+                    {{> ionIcon icon='ios-arrow-back'}}
+                    Back to Demo
+                  </a>
+                  -->
+                  	{{#if currentUser}}
 	
-	{{> infoform}}
-	
-	
-	
-	
-	{{else}}
-	You need to register and login first using your brandeis id!
-	{{/if}}
+					{{> infoform}}
+					
+					
+					
+					
+					{{else}}
+					You need to register and login first using your brandeis id!
+					{{/if}}
+
+              {{/ionContent}}
+            {{/ionView}}
 
 
 </template>

@@ -1,0 +1,62 @@
+$positive: #DE4F4F;
+$loading-font-size: 22px;
+
+@import '.meteor/local/build/programs/server/assets/packages/meteoric_ionic-sass/_ionic';
+@import '.meteor/local/build/programs/server/assets/packages/meteoric_ionicons-sass/_ionicons';
+
+.ionic-body.platform-android {
+  font-family: "Roboto", sans-serif;
+
+  h1, h2, h3, h4, h5, h6,
+  .h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: "Roboto", sans-serif;
+  }
+
+  .tab-item {
+    font-family: "Roboto", sans-serif;
+  }
+}
+
+.modal {
+  z-index: -1000;
+}
+
+.ion-slide {
+  text-align: center;
+  padding-top: 200px;
+
+  &.dark-bg {
+    h3 {
+      color: #fff;
+    }
+  }
+}
+
+.popover {
+  height: auto;
+}
+
+.item-button-left, .item-button-right {
+  button {
+    top: 16px !important;
+  }
+}
+
+.bar.bar-positive{
+  border-color: #0070FE;
+  background-color: #0070FE;
+}
+
+.button.button-positive{
+  border-color: #0070FE;
+  background-color: #0070FE;
+}
+
+.button.button-positive.active {
+  border-color: #198BCA;
+  background-color: #198BCA;
+}
+
+.positive, a.positive {
+  color: #0070FE;
+}

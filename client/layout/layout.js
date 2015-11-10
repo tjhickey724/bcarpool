@@ -26,6 +26,11 @@ Template.layout.events({
 })
 
 Template.layout.rendered = function(){
+	console.log("render");
+}
+
+/*
+Template.layout.rendered = function(){
 	  var trigger = $('.hamburger'),
 	      overlay = $('.overlay'),
 	     isClosed = false;
@@ -53,4 +58,4 @@ Template.layout.rendered = function(){
 	        $('#wrapper').toggleClass('toggled');
 	  });  
 
-}
+}*/

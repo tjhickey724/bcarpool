@@ -1,21 +1,55 @@
 <template name="layouttest">
-  <div id="slideout-menu">
-    <strong>Menu</strong>
-    <hr />
-    <a href="{{pathFor 'page1'}}">Page 1</a><br />
-    <a href="{{pathFor 'page2'}}">Page 2</a><br />
-  </div>
-  <div id="content">
-    <h1>Welcome to Demo!</h1>
-    {{> yield}}
-  </div>
-</template>
+  {{#ionBody}}
 
-<template name="page1">
-  <button>Click Me</button>
-  <p>You've pressed the button {{counter}} times.</p>
-</template>
+    {{#ionSideMenuContainer side="left"}}
 
-<template name="page2">
-  Page 2!  Page 2!  Page 2!  Page 2!  Page 2!  Page 2!  Page 2!  Page 2!  Page 2!
+      {{#ionSideMenus}}
+
+        {{#ionSideMenu}}
+          <div class="bar bar-header bar-dark">
+            <h1 class="title">BCarpool</h1>
+          </div>
+          <div class="content has-header">
+            <div class="list">
+              <div class="item">
+                <div class="pull-left">
+                {{ userName }}
+                </div>
+                <div class="pull-right">
+                <a href="#" class="button button-small button-assertive logout">Logout</a>
+                </div>
+              </div>
+              <a class="item item-icon-right" href="{{pathFor 'welcome'}}" data-ion-menu-close>Home{{> ionIcon icon="ios-arrow-right"}}</a>
+              <a class="item item-icon-right" href="{{pathFor 'about'}}" data-ion-menu-close>About{{> ionIcon icon="ios-arrow-right"}}</a>
+              {{#if shouldShowMapTab}}
+                <a class="item item-icon-right" href="{{pathFor 'map'}}" data-ion-menu-close>Map{{> ionIcon icon="ios-arrow-right"}}</a>
+              {{/if}}
+              {{#if shouldShowTripTab}}
+                <a class="item item-icon-right" href="{{pathFor 'tripinfo'}}" data-ion-menu-close>Trip{{> ionIcon icon="ios-arrow-right"}}</a>
+              {{/if}}
+
+              <div class="item item-icon-right" data-ion-menu-close>
+                Close Me {{> ionIcon icon="ios-arrow-right"}}
+              </div>
+            </div>
+          </div>
+        {{/ionSideMenu}}
+
+      {{/ionSideMenus}}
+
+      {{#ionSideMenuContent}}
+
+        {{> ionNavBar class="bar-positive"}}
+
+        {{#ionNavView}}
+            
+            {{> yield}}
+
+        {{/ionNavView}}
+
+      {{/ionSideMenuContent}}
+
+    {{/ionSideMenuContainer}}
+
+  {{/ionBody}}
 </template>

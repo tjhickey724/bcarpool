@@ -1,5 +1,21 @@
 <template name="map">
-  <body>
+
+  {{#contentFor "headerButtonLeft"}}
+              <button class="button button-clear pull-left" data-ion-menu-toggle="left">
+                {{#if isAndroid}}
+                  {{> ionIcon icon='android-more-vertical'}}
+                {{else}}
+                  {{> ionIcon icon='navicon'}}
+                {{/if}}
+              </button>
+            {{/contentFor}}
+
+  {{#contentFor "headerTitle"}}
+    <h1 class="title">Map View</h1>
+  {{/contentFor}}
+
+  {{#ionView}}
+    {{#ionContent}}
     {{#if shouldShowMap}}
   <div class="map-container" id="map-canvas">
     {{#unless geolocationError}}
@@ -40,11 +56,12 @@
     </div>
 
   {{/if}}
-  <!--
+  
   {{> statusinfo}}
 	{{> requestinfo}}
 	
 	{{> rideinfo}}
-  -->
-  </body>
+
+  {{/ionContent}}
+  {{/ionView}}
 </template>

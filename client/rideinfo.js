@@ -725,7 +725,20 @@ Template.map.onCreated(function() {
           var destmarker = destmarkers[0];
 
           google.maps.event.addListener(destmarker, 'click', function(){
-            var confirmed = confirm(destmarker.title + " as location?");
+          	console.log('click');
+          	var confirmed = false;
+          	IonPopup.show({
+          		title: destmarker.title + " as location?",
+          		templateName: 'myTemplate', //this is not recognized
+		        buttons: [{
+		          text: 'Ok',
+		          type: 'button-positive',
+		          onTap: function() {
+		            confirmed = true;
+		            IonPopup.close();
+		            }
+		        }]
+          	});
             var ride = Session.get("ride");
             var haveMyDest = false;
             ride.destGeoloc = {type: "Point", coordinates: [destmarker.position.G, destmarker.position.K]};

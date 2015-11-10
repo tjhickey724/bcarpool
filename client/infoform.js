@@ -1,26 +1,29 @@
 Template.infoform.rendered = function(){
-	$('body').removeClass('login-body');
-	$('a[title]').tooltip();
+	if (Session.get("role") == "driver") {
+		$('#driver').prop('checked', true);
+		$('#role-next').attr('disabled', false);
+		$('#numSeats').show();
+		if($('#numSeats').val().length > 0){
+			$('#role-next').attr('disabled', false);
+		}else{
+			$('#role-next').attr('disabled', true);
+		}
+	} else if (Session.get("role") == "rider") {
+		$('#rider').prop('checked', true);
+		$('#role-next').attr('disabled', false);
+		$('#numSeats').hide();
+	} else {
+		$('#role-next').attr('disabled', true);
+		$('#numSeats').hide();
+	}
 
-    $('.btn-submit').on('click', function(e) {
-
-        var formname = $(this).attr('name'); 
-        var tabname = $(this).attr('href');
-        
-        if ($('#' + formname)[0].checkValidity()) { /* Only works in Firefox/Chrome need polyfill for IE9, Safari. http://afarkas.github.io/webshim/demos/ */
-            e.preventDefault();
-            $('ul.nav li a[href="' + tabname + '"]').parent().removeClass('disabled');
-            $('ul.nav li a[href="' + tabname + '"]').trigger('click');
-        }
-
-    });
-
-    $('ul.nav li').on('click', function(e) {
-        if ($(this).hasClass('disabled')) {
-            e.preventDefault();
-            return false;
-        }
-    });
+	$('#numSeats').bind('input propertychange', function() {
+		if($(this).val().length > 0){
+			$('#role-next').attr('disabled', false);
+		}else{
+			$('#role-next').attr('disabled', true);
+		}
+	});
 }
 
 
@@ -38,22 +41,51 @@ Template.infoform.events({
 	},
 	"click #driver": function(event){
 		Session.setPersistent("role","driver");
+		$('#numSeats').show();
+		if($('#numSeats').val().length > 0){
+			$('#role-next').attr('disabled', false);
+		}else{
+			$('#role-next').attr('disabled', true);
+		}
 	},
 	"click #rider": function(event){
 		Session.setPersistent("role","rider");
+		$('#numSeats').hide();
+		$('#numSeats').val('');
+		$('#role-next').attr('disabled', false);
 	},
-	"click #leaving": function(event){
-		Session.setPersistent("direction","from");
-	},
-	"click #coming": function(event){
-		Session.setPersistent("direction","to");
-	},
-	"click #role_submit": function(event){
+	"click #role-next": function(event){
 		if (Session.get("role") == "driver"){
 			Session.setPersistent("numSeats", $("#numSeats").val());
 		}
+	}
+});
+
+
+
+Template.where.rendered = function(){
+	if (Session.get("direction") == "to") {
+		$('#coming').prop('checked', true);
+		$('#complete-info').attr('disabled', false);
+	} else if (Session.get("direction") == "from") {
+		$('#leaving').prop('checked', true);
+		$('#complete-info').attr('disabled', false);
+	} else {
+		$('#complete-info').attr('disabled', true);
+	}
+}
+
+
+Template.where.events({
+	"click #leaving": function(event){
+		Session.setPersistent("direction","from");
+		$('#complete-info').attr('disabled', false);
 	},
-	"click #complete_submit": function(event){
+	"click #coming": function(event){
+		Session.setPersistent("direction","to");
+		$('#complete-info').attr('disabled', false);
+	},
+	"click #complete-info": function(event){
 		console.log("submitted");
 		Session.setPersistent("submitted", true);
 		
@@ -118,4 +150,8 @@ Template.infoform.events({
 		ChatLines.insert(chatline);
 		*/
 	}
+});
+
+
+Template.done.events({
 });

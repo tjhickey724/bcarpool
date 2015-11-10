@@ -1,27 +1,38 @@
 <template name="about">
+	{{#contentFor "headerButtonLeft"}}
+    {{>ionNavBackButton path="welcome"}}
+  {{/contentFor}}
 
-<div class="jumbotron">
-	<h1>About the App</h1>
+  {{#contentFor "headerTitle"}}
+    <h1 class="title">About the App</h1>
+  {{/contentFor}}
+
+  {{#ionView}}
+    {{#ionContent}}
+	<div class="jumbotron">
+		<h1>About the App</h1>
+		<p>
+			Say something about the app.
+			
+		</p>
+	</div>
+	<h2>Zhongqi Li</h2>
 	<p>
-		Say something about the app.
-		
+		Bio for person one goes here 
 	</p>
-</div>
-<h2>Zhongqi Li</h2>
-<p>
-	Bio for person one goes here 
-</p>
-<h2>Tim Hickey</h2>
-<p>
-	Bio for person 2 goes here 
-</p>
-<h2>Person 3</h2>
-<p>
-	Bio for person 3 goes here 
-</p>
-<h2>Person 4</h2>
-<p>
-	Bio for person 4 goes here 
-</p>
-etc.
+	<h2>Tim Hickey</h2>
+	<p>
+		Bio for person 2 goes here 
+	</p>
+	<h2>Person 3</h2>
+	<p>
+		Bio for person 3 goes here 
+	</p>
+	<h2>Person 4</h2>
+	<p>
+		Bio for person 4 goes here 
+	</p>
+	etc.
+	{{/ionContent}}
+  {{/ionView}}
 </template>

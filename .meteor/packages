@@ -14,4 +14,9 @@ accounts-password
 u2622:persistent-session
 dburles:google-maps
 mdg:geolocation
-chriswessels:slideout
+meteoric:ionic
+meteoric:ionic-sass
+meteoric:ionicons-sass
+meteoric:autoform-ionic
+useraccounts:core
+useraccounts:ionic
