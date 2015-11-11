@@ -1,5 +1,21 @@
 <template name="tripinfo">
-	<h1>Trip Info</h1>
+	{{#contentFor "headerButtonLeft"}}
+              <button class="button button-clear pull-left" data-ion-menu-toggle="left">
+                {{#if isAndroid}}
+                  {{> ionIcon icon='android-more-vertical'}}
+                {{else}}
+                  {{> ionIcon icon='navicon'}}
+                {{/if}}
+              </button>
+            {{/contentFor}}
+
+  {{#contentFor "headerTitle"}}
+    <h1 class="title">Passenger Info</h1>
+  {{/contentFor}}
+
+  {{#ionView}}
+    {{#ionContent}}
+	<h1>Passenger Info</h1>
 	<table class="table table-striped">
 		<thead>
 			<tr><th>Passenger Name</th><th>Phone</th><th>Address</th><th>When</th><th>Delete</th></tr>
@@ -10,6 +26,8 @@
 			{{/each}}
 		</tbody>
 	</table>
+	{{/ionContent}}
+  {{/ionView}}
 	
 </template>
 

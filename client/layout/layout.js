@@ -25,10 +25,6 @@ Template.layout.events({
 	}
 })
 
-Template.layout.rendered = function(){
-	console.log("render");
-}
-
 /*
 Template.layout.rendered = function(){
 	  var trigger = $('.hamburger'),

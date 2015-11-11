@@ -8,10 +8,14 @@ Deps.autorun(function(computation){
     Session.set("role",null);
     Session.set("direction",null);
     Session.set("numSeats", null);
+    Session.set("shouldShowTrip", false);
     RideInfo.remove(Session.get("rideinfoId"));
     Geolocations.remove(Session.get("geolocInfoId"));
+    Destinations.remove(Session.get("destInfoId"));
     Session.set("rideinfoId", null);
     Session.set("geolocInfoId", null);
+    Session.set("destInfoId", null);
+    Session.set("reqId", null);
     Session.set("ride", null);
     Session.set("submitted", false);
     //console.log(Session.get("loggedIn"));

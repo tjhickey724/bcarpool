@@ -5,18 +5,6 @@ Meteor.startup(function() {
   //Geolocations._ensureIndex({loc: "2dsphere"})
 });
 
-Statuses.find().observeChanges({
-	added: function(id, object) {
-		Session.setPersistent("shouldShowTrip", true);
-	},
-
-	changed: function(id, object) {
-		if(object.theStatus == "completed"){
-			Session.setPersistent("shouldShowTrip", false);
-		}
-	}
-});
-
 var cursor = Requests.find();
 cursor.observeChanges({
 	added: function(id, object) {
@@ -237,7 +225,8 @@ function ridetorowEvents(rowInfo){
 			when: new Date()
 		};
 		//Session.set('sessionId', request.sessionId);
-		Requests.insert(request);
+		var reqId = Requests.insert(request);
+		Session.setPersistent("reqId", reqId);
 		alert("Request sent.");
 	}
 }
@@ -444,45 +433,26 @@ Template.map.helpers({
     var latLng = Geolocation.latLng();
     // Initialize the map once we have the latLng.
     if (GoogleMaps.loaded() && latLng && Meteor.userId() != null) {
-      //console.log("lat: " + latLng.lat + "\n" + "lng: " + latLng.lng);
-      var geoloc = {
-        uid: Meteor.userId(),
-        loc: {type: "Point", coordinates: [latLng.lat, latLng.lng]}
-        //dest: {type: "Point", coordinates: []}  
-      };
-      if (typeof Geolocations.findOne({uid: Meteor.userId()}, {}) != "undefined" ) {
-          var geolocation = Geolocations.findOne({uid: Meteor.userId()}, {});
-          Geolocations.update({_id: geolocation._id}, {$set: geoloc});
-          //Geolocations.update({_id: "h7jbTPQebyweWZQq3"}, {$set: {uid: "o7SXY5X5qKxx5YE7K", loc:{type: "Point", coordinates:[42.3, -71.1]}}});
-      } else {
-          Geolocations.insert(geoloc);
-      }
-      Session.setPersistent("geolocInfoId", Geolocations.findOne({uid: Meteor.userId()}, {})._id);
       return {
         center: new google.maps.LatLng(latLng.lat, latLng.lng),
         mapTypeId: google.maps.MapTypeId.ROADMAP,
         //center: {lat: Geolocations.findOne({uid: Meteor.userId()}, {}).loc.coordinates[0], lng: Geolocations.findOne({uid:Meteor.userId()}, {}).loc.coordinates[0]},
         zoom: MAP_ZOOM
       };
-    }
+  	}
   }
 });
 
 
-Template.map.rendered = function(){
-	//$('body').css('height', '100%');
-	//$('body').css('width', '100%');
-	//$('body').css('margin', 0);
-	//$('body').css('padding', 0);
-	//$('#map-canvas').css('position', 'relative');
-}
 
-
-Template.map.onCreated(function() {  
+Template.map.onCreated(function() { 
+console.log("created"); 
   var self = this;
 
   GoogleMaps.ready('map', function(map) {
+  	console.log("ready");
   	/* Central Button */
+  	/*
   	self.find('.material-button-toggle').addEventListener('click', function(){
 	  	this.classList.toggle('open');
 	  	var options = document.getElementsByClassName('option');
@@ -490,6 +460,7 @@ Template.map.onCreated(function() {
 	  		options[i].classList.toggle('scale-on');
 	  	}
 	  });
+	*/
   	
     var locmarkers = [];
     var destpins = [];
@@ -503,10 +474,27 @@ Template.map.onCreated(function() {
 
     var searchBox = new google.maps.places.SearchBox(input);
     map.instance.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+    setUpSearchBox();
 
       // Create finalize button
     var finalizeButtonDiv = document.createElement('input');
     var finalizeButton = new FinalizeButton(finalizeButtonDiv, map.instance);
+
+    if(Session.get("role") == "driver"){
+   		map.instance.controls[google.maps.ControlPosition.TOP_LEFT].push(finalizeButtonDiv);
+   	}
+
+   	 var locations = [];
+      var info = [];
+      var geolocations = Geolocations.find().fetch();
+      geolocations.forEach(function(location, index){
+	        locations.push(location);
+	        info.push(generateHTML(location.uid));
+      });
+
+
+    dropDestPins();
+    dropLocMarkers();
 
     RideInfo.find().observeChanges({
 		removed: function(id) {
@@ -517,252 +505,143 @@ Template.map.onCreated(function() {
 				}
 			});
 
-			destpins.forEach(function(destpin, index){
-				if(destpin._id == id){
-					destpin.setMap(null);
-				}
-			});	
+			removeDestPin(id);
 		}
 	});
 
 
 	Geolocations.find().observeChanges({
+		added: function(id, location) {
+			 var info = generateHTML(location.uid);
+			 var locmarker = new google.maps.Marker({
+	                position: {lat: location.loc.coordinates[0], lng: location.loc.coordinates[1]},
+	                animation: google.maps.Animation.DROP,
+	                map: map.instance,
+	                role: info.role,
+	                _id: location._id,
+	                label: ""+info.ride.who,
+	                ride: info.ride,
+	                //html: '<div id="infowindow'+labelindex+'>'+info[labelindex-1]+'</div>'
+	                html: info.html
+	              });
+			 locmarkers.push(locmarker);
+			 addEventsForLocMarker(locmarker);
+		},
+		changed: function(id, location) { // update marker position when changed
+			for (i = 0; i < locmarkers.length; i++) {
+				if (locmarkers[i]._id == id){
+					locmarkers[i].position = {lat: location.loc.coordinates[0], lng: location.loc.coordinates[1]};
+					break;
+				}
+			}
+		},
 		removed: function(id) {
-			console.log("removed geoloc");	
+			console.log("removed");
+			removeLocMarker(id);
 		}
 	});
 
-      // Create call button
+	Destinations.find().observeChanges({
+		added: function(id , dest){ /* drop destpins */
+			var ride = RideInfo.findOne({uid: dest.uid}, {});
+			console.log(dest.uid);
+			var destpin = new google.maps.Marker({
+	                position: {lat: dest.destGeoloc.coordinates[0], lng: dest.destGeoloc.coordinates[1]},
+	                map: map.instance,
+	                animation: google.maps.Animation.DROP,
+	                ride_id: ride._id,
+	                _id: id,
+	                role: ride.status1,
+	                html:'<p>'+dest.destAddress+'</p>'
+	              });
+			destpins.push(destpin);
+			addEventsForDestpin(destpin);
+		},
+		removed: function(id){ /* remove destpin */
+			removeDestPin(id);
+		}
+	});
 
-      // push buttons on map
-    if(Session.get("role") == "driver"){
-   		map.instance.controls[google.maps.ControlPosition.TOP_LEFT].push(finalizeButtonDiv);
-   	}
 
-
-   	function FinalizeButton(controlDiv, map) {
-
-        controlDiv.className = 'controls';
-        controlDiv.type = "button";
-        controlDiv.id = "finalize";
-        controlDiv.value = 'Finalize';
-
-        controlDiv.addEventListener('click', function() {
-          console.log("click");
-          RideInfo.remove(RideInfo.findOne({uid: Meteor.userId()}, {})._id);
-          Geolocations.remove(Geolocations.findOne({uid: Meteor.userId()}, {})._id);
-          Router.go("welcome");
-          Session.setPersistent("submitted", false);
-          /*
-          if(Session.get("role") == "rider"){
-            destpins.forEach(function(destpin, index){
-              if (destpin.role != "driver" || destpin.role != "self"){
-                destpin.setMap(null);
-              }
-            });
-            locmarkers.forEach(function(locmarker, index){
-              if (locmarker.role != "driver" || locmarker.role != "self"){
-                locmarker.setMap(null);
-              }
-            });
-          } else {
-            destpins.forEach(function(destpin, index){
-              if (destpin.role != "rider" || destpin.role != "self"){
-                destpin.setMap(null);
-              }
-            });
-            locmarkers.forEach(function(locmarker, index){
-              if (locmarker.role != "rider" || locmarker.role != "self"){
-                locmarker.setMap(null);
-              }
-            });
-          } 
-          */
-        });
-      }
-
-    // Create and move the marker when latLng changes.
-    self.autorun(function() {
-      var latLng = Geolocation.latLng();
-      var currentPosition = new google.maps.LatLng(latLng.lat, latLng.lng);
-     // if (! latLng)
-       // return;
-      var locations = [];
-      var info = [];
-      var geolocations = Geolocations.find().fetch();
-      var max = RideInfo.find().count();
-      geolocations.forEach(function(location, index){
-      	if( index <= max - 1) {
-	        locations.push({lat: location.loc.coordinates[0], lng: location.loc.coordinates[1]});
-	        info.push(generateHTML(location.uid));
-	    }
-      });
-      //console.log(info);
-      setUpSearchBox();
-      dropLocMarkers();
-      dropDestPins();
-
-      function dropDestPins(){
+	function dropDestPins(){
       	  clearDestPins();
 
-	      var rides = RideInfo.find().fetch();
-	      rides.forEach(function(ride, index){
-	        //console.log(ride);
-	        if(ride.uid != Meteor.userId()){
+	      var dests = Destinations.find().fetch();
+	      dests.forEach(function(dest, index){
+	        var ride = RideInfo.findOne({uid: Meteor.userId()}, {});
+	        if(dest.uid != Meteor.userId()){
 	          if (Session.get("role") == "rider"){
 	            if (ride.status1 == "driver"){
 	              destpins.push(new google.maps.Marker({
-	                position: {lat: ride.destGeoloc.coordinates[0], lng: ride.destGeoloc.coordinates[1]},
+	                position: {lat: dest.destGeoloc.coordinates[0], lng: dest.destGeoloc.coordinates[1]},
 	                map: map.instance,
 	                animation: google.maps.Animation.DROP,
-	                _id: ride._id,
+	                ride_id: ride._id,
+	                _id: dest._id,
 	                role: ride.status1,
-	                html:'<p>'+ride.destAddress+'</p>'
+	                html:'<p>'+dest.destAddress+'</p>'
 	              }));
 	            }
 	          } else {
 	            if (ride.status1 == "rider"){
 	              destpins.push(new google.maps.Marker({
-	                position: {lat: ride.destGeoloc.coordinates[0], lng: ride.destGeoloc.coordinates[1]},
+	                position: {lat: dest.destGeoloc.coordinates[0], lng: dest.destGeoloc.coordinates[1]},
 	                map: map.instance,
 	                animation: google.maps.Animation.DROP,
-	                _id: ride._id,
+	                ride_id: ride._id,
+	                _id: dest._id,
 	                role: ride.status1,
-	                html:'<p>'+ride.destAddress+'</p>'
+	                html:'<p>'+dest.destAddress+'</p>'
 	              }));
 	            }
 	          }
 	        } else {
-	        	if (ride.destGeoloc != null) {
+	        	if (dest.destGeoloc != null) {
 			          destpins.push(new google.maps.Marker({
-			            position: {lat: ride.destGeoloc.coordinates[0], lng: ride.destGeoloc.coordinates[1]},
+			            position: {lat: dest.destGeoloc.coordinates[0], lng: dest.destGeoloc.coordinates[1]},
 			            map: map.instance,
 			            animation: google.maps.Animation.DROP,
-			            _id: ride._id,
+			            ride_id: ride._id,
+			            _id: dest._id,
 			            role: "self",
-			            html:'<p>'+ride.destAddress+'</p>',
+			            html:'<p>'+dest.destAddress+'</p>',
 			            label: "M"
 			          }));
 			     }
 	        }
 	      });
+		addEventsForDestpins();
+      }
 
-	      destpins.forEach(function(destpin, index){
-	        google.maps.event.addListener(destpin, 'click', function(){
-	          infowindow.setContent(this.html);
-	          infowindow.open(map.instance, this);
-	        });
+      function addEventsForDestpins(){
+      	destpins.forEach(function(destpin, index){
+      		addEventsForDestpin(destpin);
 	      });
       }
 
+      function addEventsForDestpin(destpin){
+      	google.maps.event.addListener(destpin, 'click', function(){
+	          infowindow.setContent(destpin.html);
+	          infowindow.open(map.instance, destpin);
+	        });
+      }
 
-    function CallButton(controlDiv, map, ride){
-    	controlDiv.className = 'controls';
-        //controlDiv.type = "button";
-        controlDiv.id = "call";
-        //controlDiv.value = 'Call';
-        var icon = document.createElement('span');
-        icon.innerHTML = "Call";
-        icon.className = "glyphicon glyphicon-earphone";
-        icon.setAttribute("aria-hidden", true);
+      function removeDestPin(id){
+      	for (i = 0; i < destpins.length; i++) {
+      		if(destpins[i]._id == id){
+				destpins[i].setMap(null);
+				break;
+			}
+      	}
+      }
 
-        //controlDiv.value = "Call";
-        controlDiv.appendChild(icon);
 
-        controlDiv.addEventListener('click', function(){
-        	var call = new ridetorowEvents(ride);
-        	call.clickCall();
-        });
-    }
-
-    function setUpSearchBox(){
-      //console.log(map.instance.controls[google.maps.ControlPosition.TOP_LEFT].j);
-      // Create the search box and link it to the UI element.
-      //console.log(map.instance.controls[google.maps.ControlPosition.TOP_LEFT].j);
-
-      // Bias the SearchBox results towards current map's viewport.
-      google.maps.event.addListener(map, 'bounds_changed', function(){
-        searchBox.setBounds(map.getBounds());
-      });
-
-      var destmarkers = [];
-
-      google.maps.event.addListener(searchBox, 'places_changed', function() {
-        var places = searchBox.getPlaces();
-
-        if (places.length == 0) {
-          return;
+      function clearDestPins() {
+        for (var i = 0; i < destpins.length; i++) {
+          destpins[i].setMap(null);
         }
-
-        var place = places[0];
-        //console.log(destmarkers.length);
-
-        // Clear out the old markers.
-        destmarkers.forEach(function(marker) {
-          marker.setMap(null);
-        });
-
-        destmarkers = [];
-
-        // For each place, get the icon, name and location.
-        var bounds = new google.maps.LatLngBounds();
-          var icon = {
-            url: place.icon,
-            size: new google.maps.Size(71, 71),
-            origin: new google.maps.Point(0, 0),
-            anchor: new google.maps.Point(17, 34),
-            scaledSize: new google.maps.Size(25, 25)
-          };
-
-          // Create a marker for each place.
-          destmarkers.push(new google.maps.Marker({
-            map: map.instance,
-            icon: icon,
-            title: place.name,
-            position: place.geometry.location
-          }));
-
-          var destmarker = destmarkers[0];
-
-          google.maps.event.addListener(destmarker, 'click', function(){
-          	console.log('click');
-          	var confirmed = false;
-          	IonPopup.show({
-          		title: destmarker.title + " as location?",
-          		templateName: 'myTemplate', //this is not recognized
-		        buttons: [{
-		          text: 'Ok',
-		          type: 'button-positive',
-		          onTap: function() {
-		            confirmed = true;
-		            IonPopup.close();
-		            }
-		        }]
-          	});
-            var ride = Session.get("ride");
-            var haveMyDest = false;
-            ride.destGeoloc = {type: "Point", coordinates: [destmarker.position.G, destmarker.position.K]};
-            ride.destAddress = destmarker.title;
-            if(confirmed){
-                RideInfo.update({_id:Session.get("rideinfoId")}, {$set:ride});
-                dropDestPins();
-            }
-          });
-
-          console.log(destmarker.position.G);
-
-          if (place.geometry.viewport) {
-            // Only geocodes have viewport.
-            bounds.union(place.geometry.viewport);
-          } else {
-            bounds.extend(place.geometry.location);
-          }
-        map.instance.fitBounds(bounds);
-      });
-    }
-
-
-
+        destpins = [];
+      }
 
 
 
@@ -817,6 +696,7 @@ Template.map.onCreated(function() {
         return {html:content, role:role, ride:rideInfo};
       }
 
+
       function dropLocMarkers() {
         clearLocMarkers();
         var totalTimeOut = 0;
@@ -829,16 +709,17 @@ Template.map.onCreated(function() {
         }, totalTimeOut);
       }
       // If the marker doesn't yet exist, create it.
-      function addLocMarkersWithTimeout(position, labelindex, timeout) {
+      function addLocMarkersWithTimeout(location, labelindex, timeout) {
         //console.log(titleinfo);
         window.setTimeout(function() {
           if (Session.get("role") == "rider"){
             if(info[labelindex-1].role == "driver" || info[labelindex-1].role == "self"){
                 locmarkers.push(new google.maps.Marker({
-                position: position,
+                position: {lat: location.loc.coordinates[0], lng: location.loc.coordinates[1]},
                 animation: google.maps.Animation.DROP,
                 map: map.instance,
                 role: info[labelindex-1].role,
+                _id: location._id,
                 label: ""+info[labelindex-1].ride.who,
                 ride: info[labelindex-1].ride,
                 //html: '<div id="infowindow'+labelindex+'>'+info[labelindex-1]+'</div>'
@@ -848,10 +729,11 @@ Template.map.onCreated(function() {
         } else {
           if(info[labelindex-1].role == "rider" || info[labelindex-1].role == "self"){
                 locmarkers.push(new google.maps.Marker({
-                position: position,
+                position: {lat: location.loc.coordinates[0], lng: location.loc.coordinates[1]},
                 animation: google.maps.Animation.DROP,
                 map: map.instance,
                 role: info[labelindex-1].role,
+                _id: location._id,
                 label: ""+info[labelindex-1].ride.who,
                 ride: info[labelindex-1].ride,
                 //html: '<div id="infowindow'+labelindex+'>'+info[labelindex-1]+'</div>'
@@ -862,27 +744,19 @@ Template.map.onCreated(function() {
         }, timeout);
       }
 
-      function clearLocMarkers() {
-        for (var i = 0; i < locmarkers.length; i++) {
-          locmarkers[i].setMap(null);
-        }
-        locmarkers = [];
-      }
-
-      function clearDestPins() {
-        for (var i = 0; i < destpins.length; i++) {
-          destpins[i].setMap(null);
-        }
-        destpins = [];
-      }
 
       function addEventsForLocMarkers(){ 
           locmarkers.forEach(function(marker, index){
-            google.maps.event.addListener(marker, 'click', function(){
-              infowindow.setContent(this.html);
-              infowindow.open(map.instance, this);
+          	addEventsForLocMarker(marker);
+          });
+      }
+
+      function addEventsForLocMarker(marker){
+      	google.maps.event.addListener(marker, 'click', function(){
+              infowindow.setContent(marker.html);
+              infowindow.open(map.instance, marker);
               //if(this.role == "rider"){
-              	var selfMarker = this;
+              	var selfMarker = marker;
               	if (self.find("#request")) {
 	                self.find("#request").addEventListener('click', function(){
 	                  var events = new ridetorowEvents(selfMarker.ride);
@@ -895,9 +769,174 @@ Template.map.onCreated(function() {
 	            }
               //}
             });
-          });
       }
 
+      function removeLocMarker(id){
+      	for (i = 0; i < locmarkers.length; i++) {
+      		if(locmarkers[i]._id == id){
+				locmarkers[i].setMap(null);
+				break;
+			}
+      	}
+      }
+
+      function clearLocMarkers() {
+        for (var i = 0; i < locmarkers.length; i++) {
+          locmarkers[i].setMap(null);
+        }
+        locmarkers = [];
+      }
+
+
+      function setUpSearchBox(){
+	      //console.log(map.instance.controls[google.maps.ControlPosition.TOP_LEFT].j);
+	      // Create the search box and link it to the UI element.
+	      //console.log(map.instance.controls[google.maps.ControlPosition.TOP_LEFT].j);
+
+	      // Bias the SearchBox results towards current map's viewport.
+	      google.maps.event.addListener(map, 'bounds_changed', function(){
+	        searchBox.setBounds(map.getBounds());
+	      });
+
+	      var destmarkers = [];
+
+	      google.maps.event.addListener(searchBox, 'places_changed', function() {
+	        var places = searchBox.getPlaces();
+
+	        if (places.length == 0) {
+	          return;
+	        }
+
+	        var place = places[0];
+	        //console.log(destmarkers.length);
+
+	        // Clear out the old markers.
+	        destmarkers.forEach(function(marker) {
+	          marker.setMap(null);
+	        });
+
+	        destmarkers = [];
+
+	        // For each place, get the icon, name and location.
+	        var bounds = new google.maps.LatLngBounds();
+	          var icon = {
+	            url: place.icon,
+	            size: new google.maps.Size(71, 71),
+	            origin: new google.maps.Point(0, 0),
+	            anchor: new google.maps.Point(17, 34),
+	            scaledSize: new google.maps.Size(25, 25)
+	          };
+
+	          // Create a marker for each place.
+	          destmarkers.push(new google.maps.Marker({
+	            map: map.instance,
+	            icon: icon,
+	            title: place.name,
+	            optimized: false,
+	            position: place.geometry.location
+	          }));
+
+	          var destmarker = destmarkers[0];
+	          console.log(destmarker.title);
+
+	          google.maps.event.addListener(destmarker, 'click', function(){
+	          	console.log('click');
+	          	var confirmed = confirm(destmarker.title + " as location?");
+	            if(confirmed){
+	            	var destination = {
+	            		uid: Meteor.userId(),
+	            		destGeoloc: {type: "Point", coordinates: [destmarker.position.G, destmarker.position.K]},
+	            		destAddress: destmarker.title
+	            	} 
+	            	var destId = Destinations.insert(destination);
+	            	Session.setPersistent('destInfoId', destId);
+	            }
+	          });
+
+	          console.log(destmarker.position.G);
+
+	          if (place.geometry.viewport) {
+	            // Only geocodes have viewport.
+	            bounds.union(place.geometry.viewport);
+	          } else {
+	            bounds.extend(place.geometry.location);
+	          }
+	        map.instance.fitBounds(bounds);
+	      });
+	    }
+
+
+
+	function FinalizeButton(controlDiv, map) {
+
+        controlDiv.className = 'controls';
+        controlDiv.type = "button";
+        controlDiv.id = "finalize";
+        controlDiv.value = 'Finalize';
+
+        controlDiv.addEventListener('click', function() {
+          console.log("click");
+          var sts = Statuses.findOne({driverId:Meteor.userId()}, {});
+          if (sts) {
+          	Session.setPersistent("shouldShowTrip", true);
+          	Router.go("tripinfo");
+          } else {
+          	Router.go("welcome");
+          }
+          Session.setPersistent("submitted", false);
+        });
+      }
+
+
+    function CallButton(controlDiv, map, ride){
+    	controlDiv.className = 'controls';
+        //controlDiv.type = "button";
+        controlDiv.id = "call";
+        //controlDiv.value = 'Call';
+        var icon = document.createElement('span');
+        icon.innerHTML = "Call";
+        icon.className = "glyphicon glyphicon-earphone";
+        icon.setAttribute("aria-hidden", true);
+
+        //controlDiv.value = "Call";
+        controlDiv.appendChild(icon);
+
+        controlDiv.addEventListener('click', function(){
+        	var call = new ridetorowEvents(ride);
+        	call.clickCall();
+        });
+    }
+
+
+
+
+      // Create call button
+       //setUpSearchBox();
+    // Create and move the marker when latLng changes.
+    self.autorun(function() {
+    	console.log("autorun");
+      var latLng = Geolocation.latLng();
+      var currentPosition = new google.maps.LatLng(latLng.lat, latLng.lng);
+     // if (! latLng)
+       // return;
+      //console.log(info);
+      updateLocation();
+
+     function updateLocation(){
+	      var geoloc = {
+	        uid: Meteor.userId(),
+	        loc: {type: "Point", coordinates: [latLng.lat, latLng.lng]}
+	      };
+	      if (typeof Geolocations.findOne({uid: Meteor.userId()}, {}) != "undefined" ) {
+	          var geolocation = Geolocations.findOne({uid: Meteor.userId()}, {});
+	          Geolocations.update({_id: geolocation._id}, {$set: geoloc});
+	          //Geolocations.update({_id: "h7jbTPQebyweWZQq3"}, {$set: {uid: "o7SXY5X5qKxx5YE7K", loc:{type: "Point", coordinates:[42.3, -71.1]}}});
+	      } else {
+	          Geolocations.insert(geoloc);
+	      }
+
+	      Session.setPersistent("geolocInfoId", Geolocations.findOne({uid: Meteor.userId()}, {})._id);
+      }
       // Center and zoom the map view onto the current position.
       map.instance.setCenter(currentPosition);
       map.instance.setZoom(MAP_ZOOM);

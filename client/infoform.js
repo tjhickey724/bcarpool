@@ -89,7 +89,7 @@ Template.where.events({
 		console.log("submitted");
 		Session.setPersistent("submitted", true);
 		
-		event.preventDefault();
+		//event.preventDefault();
 
 		if (Session.get("direction")==null || Session.get("role")==null){
 			// generate an error message/warning on the page ...
@@ -109,8 +109,6 @@ Template.where.events({
 				carSpace:Session.get("numSeats"),
 				status1:Session.get("role"),
 				direction:Session.get("direction"),
-				destGeoloc:null,
-				destAddress:null,
 				when: new Date()
 			};
 
@@ -128,7 +126,7 @@ Template.where.events({
 		Session.setPersistent("ride", ride);
 		console.dir(ride);
 		//Meteor.call("insertRideInfo", ride);
-		Router.go('map');
+		//Router.go('map');
 
 		/*
 		var x = $("#chatinput").val()
