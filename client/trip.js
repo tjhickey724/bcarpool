@@ -9,6 +9,7 @@ Template.tripinfo.helpers({
 					dest: destination.destAddress, 
 					when: st.when};
 			Trips.insert(trip);
+			Destinations.remove(destination._id);
 			Statuses.remove(st._id);
 		});
 		return Trips.find({},{sort:{when:-1}});
@@ -27,10 +28,12 @@ Template.tripinfo.rendered = function(){
     	 Geolocations.remove(Session.get("geolocInfoId"));
     	 Session.set("geolocInfoId", null);
     }
+    /*
     if (Session.get("destInfoId") !== null || Session.get("destInfoId") != undefined){
     	Destinations.remove(Session.get("destInfoId"));
     	Session.set("destInfoId", null);
     }
+    */
     if (Session.get("reqId") !== null || Session.get("reqId") != undefined){
 		Requests.remove(Session.get("reqId"));
 		Session.set("reqId", null);

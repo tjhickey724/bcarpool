@@ -12,6 +12,8 @@ Deps.autorun(function(computation){
     RideInfo.remove(Session.get("rideinfoId"));
     Geolocations.remove(Session.get("geolocInfoId"));
     Destinations.remove(Session.get("destInfoId"));
+    Requests.remove(Session.get("reqId"));
+    Statuses.remove(Session.get("statusInfoId"));
     Session.set("rideinfoId", null);
     Session.set("geolocInfoId", null);
     Session.set("destInfoId", null);

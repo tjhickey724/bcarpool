@@ -24,6 +24,16 @@ Template.infoform.rendered = function(){
 			$('#role-next').attr('disabled', true);
 		}
 	});
+
+	if (Session.get("geolocInfoId") !== null || Session.get("geolocInfoId") != undefined){
+    			//console.log(Session.get("geolocInfoId"));
+		    	 Geolocations.remove(Session.get("geolocInfoId"));
+		    	 Session.set("geolocInfoId", null);
+		    }
+		    if (Session.get("destInfoId") !== null || Session.get("destInfoId") != undefined){
+		    	Destinations.remove(Session.get("destInfoId"));
+		    	Session.set("destInfoId", null);
+		    }
 }
 
 

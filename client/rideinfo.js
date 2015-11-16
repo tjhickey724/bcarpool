@@ -1,6 +1,6 @@
 var MAP_ZOOM = 15;
 
-Meteor.startup(function() {  
+Meteor.startup(function() { 
   GoogleMaps.load({v:'3', key: 'AIzaSyA-dw_b_tu3Y-BYBS9B6WV0zHK2_OuN0QI', libraries: 'geometry,places'});
   //Geolocations._ensureIndex({loc: "2dsphere"})
 });
@@ -11,9 +11,11 @@ cursor.observeChanges({
 		if (object.receiverId == Meteor.userId()) {
 				if (object.theStatus == "pending") {
 					var name = RideInfo.findOne({uid:object.senderId}, {}).who;
-					var acceptance = confirm(name + " send you a request: \n" + object.message);
-					if (acceptance) {
-						object.theStatus = "confirmed";
+					IonPopup.confirm({
+				      title: 'Request',
+				      template: "<strong>" + name + "</strong>" + " send you a request: \n" + object.message,
+				      onOk: function() {
+				      	object.theStatus = "confirmed";
 						if (object.senderIsRider) {
 							var sts = {
 								requestId: id,
@@ -32,17 +34,13 @@ cursor.observeChanges({
 							};
 							//var driverInfo = RideInfo.findOne({uid: object.senderId}, {});
 						}
-						Statuses.insert(sts);
-
-						/*
-						var driverId = driverInfo._id;
-							delete driverInfo['_id'];
-							driverInfo.carSpace -= 1;
-							RideInfo.update({_id:driverId}, {$set:driverInfo});
-						*/
-
-					} else {
-						object.theStatus = "rejected";
+						var stsId = Statuses.insert(sts);
+						Session.setPersistent("statusInfoId", stsId);
+						object.when = new Date();
+						Requests.update({_id:id}, {$set:object});
+				      },
+				      onCancel: function() {
+				        object.theStatus = "rejected";
 						if (object.senderIsRider) {
 							var driverInfo = RideInfo.findOne({uid: object.receiverId}, {});
 						} else {
@@ -50,17 +48,18 @@ cursor.observeChanges({
 						}
 
 						var driverId = driverInfo._id;
-							delete driverInfo['_id'];
-							driverInfo.carSpace += 1;
-							RideInfo.update({_id:driverId}, {$set:driverInfo});
-					}
-					object.when = new Date();
-					Requests.update({_id:id}, {$set:object});
+						delete driverInfo['_id'];
+						driverInfo.carSpace += 1;
+						RideInfo.update({_id:driverId}, {$set:driverInfo});
+						object.when = new Date();
+						Requests.update({_id:id}, {$set:object});
+				      }
+				    });
 				}
 			
 		}
 	}
-})
+});
 
 /*getter functions merged from rideinfo*/
 
@@ -149,6 +148,7 @@ function ridetorowHelpers(rowInfo){
 			if (Session.get("role") == "driver") {
 				if (rowInfo.status1 == "rider") {
 					if (Requests.find({$and: [{senderId: Meteor.userId()}, {receiverId: rowInfo.uid}, {theStatus: "pending"}]}, {}).count() != 0 || Statuses.find({$and: [{riderId: rowInfo.uid}, {driverId: Meteor.userId()}, {theStatus: "riding"}]}, {}).count() != 0) {
+						console.log("here");
 						return false;
 					} else {
 						return true;
@@ -191,7 +191,11 @@ function ridetorowEvents(rowInfo){
 	};
 
 	this.clickCall = function(){
-		alert(rowInfo.phone);
+		 IonPopup.alert({
+	      title: "<strong>" + rowInfo.who + "</strong>" + '\'s' + " phone number",
+	      template: rowInfo.phone,
+	      okText: 'Got It.'
+	    });
 	};
 
 	this.clickRequest = function (){
@@ -227,7 +231,11 @@ function ridetorowEvents(rowInfo){
 		//Session.set('sessionId', request.sessionId);
 		var reqId = Requests.insert(request);
 		Session.setPersistent("reqId", reqId);
-		alert("Request sent.");
+		 IonPopup.alert({
+	      title: 'Success',
+	      template: 'Request Sent!',
+	      okText: 'Ok'
+	    });
 	}
 }
 
@@ -433,6 +441,7 @@ Template.map.helpers({
     var latLng = Geolocation.latLng();
     // Initialize the map once we have the latLng.
     if (GoogleMaps.loaded() && latLng && Meteor.userId() != null) {
+    	console.log("loaded");
       return {
         center: new google.maps.LatLng(latLng.lat, latLng.lng),
         mapTypeId: google.maps.MapTypeId.ROADMAP,
@@ -469,20 +478,23 @@ console.log("created");
                 });
 
     var input = self.find("#pac-input");
+    if (Session.get("direction") == "to"){
+    	$("#pac-input").prop("disabled", true);
+    } else {
+    	$("#pac-input").prop("disabled", false);
+    }
+    /*
     var circle_menu = self.find("#circle-menu");
     map.instance.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(circle_menu);
-
+	*/
     var searchBox = new google.maps.places.SearchBox(input);
     map.instance.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
     setUpSearchBox();
 
-      // Create finalize button
-    var finalizeButtonDiv = document.createElement('input');
-    var finalizeButton = new FinalizeButton(finalizeButtonDiv, map.instance);
+    var buttonGroupDiv = document.createElement('div');
+    var buttonGroup = new ButtonGroup(buttonGroupDiv, map.instance);
 
-    if(Session.get("role") == "driver"){
-   		map.instance.controls[google.maps.ControlPosition.TOP_LEFT].push(finalizeButtonDiv);
-   	}
+   	map.instance.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(buttonGroupDiv);
 
    	 var locations = [];
       var info = [];
@@ -492,13 +504,28 @@ console.log("created");
 	        info.push(generateHTML(location.uid));
       });
 
-
-    dropDestPins();
-    dropLocMarkers();
+    if (Session.get("direction") == "from"){
+    	dropDestPins();
+    }
+    //dropLocMarkers();
 
     RideInfo.find().observeChanges({
+    	changed: function(id, object) {
+    		//console.log("ridechange");
+    		var userId = RideInfo.findOne({_id: id}, {}).uid;
+    		if (userId != Meteor.userId()) {
+	    		var geo = Geolocations.findOne({uid:userId}, {});
+	    		if (geo != undefined) {
+		    		if (object.status1 != Session.get("role")){
+		    			dropSingleLocMarker(geo._id, geo);
+		    		} else {
+		    			removeLocMarker(geo._id);
+		    		}
+	    		}
+    		}
+    	},
 		removed: function(id) {
-			console.log("removed rideinfo");
+			//console.log("removed rideinfo");
 			locmarkers.forEach(function(locmarker, index){
 				if(locmarker.ride._id == id){
 					locmarker.setMap(null);
@@ -512,22 +539,11 @@ console.log("created");
 
 	Geolocations.find().observeChanges({
 		added: function(id, location) {
-			 var info = generateHTML(location.uid);
-			 var locmarker = new google.maps.Marker({
-	                position: {lat: location.loc.coordinates[0], lng: location.loc.coordinates[1]},
-	                animation: google.maps.Animation.DROP,
-	                map: map.instance,
-	                role: info.role,
-	                _id: location._id,
-	                label: ""+info.ride.who,
-	                ride: info.ride,
-	                //html: '<div id="infowindow'+labelindex+'>'+info[labelindex-1]+'</div>'
-	                html: info.html
-	              });
-			 locmarkers.push(locmarker);
-			 addEventsForLocMarker(locmarker);
+			//console.log("added");
+			dropSingleLocMarker(id, location);
 		},
 		changed: function(id, location) { // update marker position when changed
+			//console.log("changed");
 			for (i = 0; i < locmarkers.length; i++) {
 				if (locmarkers[i]._id == id){
 					locmarkers[i].position = {lat: location.loc.coordinates[0], lng: location.loc.coordinates[1]};
@@ -544,18 +560,21 @@ console.log("created");
 	Destinations.find().observeChanges({
 		added: function(id , dest){ /* drop destpins */
 			var ride = RideInfo.findOne({uid: dest.uid}, {});
-			console.log(dest.uid);
-			var destpin = new google.maps.Marker({
-	                position: {lat: dest.destGeoloc.coordinates[0], lng: dest.destGeoloc.coordinates[1]},
-	                map: map.instance,
-	                animation: google.maps.Animation.DROP,
-	                ride_id: ride._id,
-	                _id: id,
-	                role: ride.status1,
-	                html:'<p>'+dest.destAddress+'</p>'
-	              });
-			destpins.push(destpin);
-			addEventsForDestpin(destpin);
+			//console.log(dest.uid);
+			if (Session.get("role") != ride.status1){
+				var destpin = new google.maps.Marker({
+		                position: {lat: dest.destGeoloc.coordinates[0], lng: dest.destGeoloc.coordinates[1]},
+		                map: map.instance,
+		                animation: google.maps.Animation.DROP,
+		                ride_id: ride._id,
+		                _id: id,
+		                icon: '/images/beachflag.png',
+		                role: ride.status1,
+		                html:'<p>'+dest.destAddress+'</p>'
+		              });
+				destpins.push(destpin);
+				addEventsForDestpin(destpin);
+			}
 		},
 		removed: function(id){ /* remove destpin */
 			removeDestPin(id);
@@ -578,6 +597,7 @@ console.log("created");
 	                animation: google.maps.Animation.DROP,
 	                ride_id: ride._id,
 	                _id: dest._id,
+	                icon: '/images/beachflag.png',
 	                role: ride.status1,
 	                html:'<p>'+dest.destAddress+'</p>'
 	              }));
@@ -590,6 +610,7 @@ console.log("created");
 	                animation: google.maps.Animation.DROP,
 	                ride_id: ride._id,
 	                _id: dest._id,
+	                icon: '/images/beachflag.png',
 	                role: ride.status1,
 	                html:'<p>'+dest.destAddress+'</p>'
 	              }));
@@ -603,6 +624,7 @@ console.log("created");
 			            animation: google.maps.Animation.DROP,
 			            ride_id: ride._id,
 			            _id: dest._id,
+			            icon: '/images/beachflag.png',
 			            role: "self",
 			            html:'<p>'+dest.destAddress+'</p>',
 			            label: "M"
@@ -648,8 +670,17 @@ console.log("created");
       function generateHTML(userId){
         var rideInfo = RideInfo.findOne({uid: userId}, {});
         //var content = "My ass";
+        //console.log(userId);
+        var destInfo = Destinations.findOne({uid: userId}, {});
+        if (destInfo == undefined) {
+        	if (Session.get("direction") == "to"){
+        		destInfo = {destAddress: "Brandeis University", when: rideInfo.when};
+        	} else {
+        		destInfo = {destAddress: "N/A", when: "N/A"};
+        	}
+        }
         if (userId == Meteor.userId()){
-          return {html: '<p>You</p>', role: "self", ride:rideInfo};
+          return {html: '<p>You</p>', role: Session.get("role"), isSelf: true, ride:rideInfo};
         }
 
 
@@ -672,7 +703,7 @@ console.log("created");
                         '<tr><th>Name</th><th>Go To</th><th>Time</th></tr>' +
                       '</thead>' +
                       '<tbody>' +
-                        '<tr><td>'+rideInfo.who+'</td><td>'+rideInfo.destAddress+'</td><td>'+rideInfo.when+'</td></tr>' +
+                        '<tr><td>'+rideInfo.who+'</td><td>'+destInfo.destAddress+'</td><td>'+destInfo.when+'</td></tr>' +
                       '</tbody>' +
                     '</table>'+ requestButton + phoneButton;
           role = "rider";
@@ -683,18 +714,40 @@ console.log("created");
         	}
           content = '<table class="table table-striped">'+
                         '<thead>' +
-                        '<tr><th>Name</th><th>Back To</th><th>Time</th></tr>' +
+                        '<tr><th>Name</th><th>Back To</th><th>Seats Left</th><th>Time</th></tr>' +
                       '</thead>' +
                       '<tbody>' +
-                        '<tr><td>'+rideInfo.who+'</td><td>'+rideInfo.destAddress+'</td><td>'+rideInfo.when+'</td></tr>' +
+                        '<tr><td>'+rideInfo.who+'</td><td>'+destInfo.destAddress+'</td><td>'+rideInfo.carSpace+'</td><td>'+destInfo.when+'</td></tr>' +
                       '</tbody>' +
                     '</table>'+requestButton + phoneButton;
           role = "driver";
         }
         
 
-        return {html:content, role:role, ride:rideInfo};
+        return {html:content, role:role, isSelf: false, ride:rideInfo};
       }
+
+      function dropSingleLocMarker(id, location) {
+			 var info = generateHTML(location.uid);
+			 if ((Session.get("role") != info.role) || info.isSelf){
+			 	//console.log(info.role);
+			 	//console.log(" one time "+ info.role + info.isSelf);
+				 var locmarker = new google.maps.Marker({
+		                position: {lat: location.loc.coordinates[0], lng: location.loc.coordinates[1]},
+		                animation: google.maps.Animation.DROP,
+		                map: map.instance,
+		                role: info.role,
+		                isSelf: info.isSelf,
+		                _id: location._id,
+		                label: ""+info.ride.who,
+		                ride: info.ride,
+		                //html: '<div id="infowindow'+labelindex+'>'+info[labelindex-1]+'</div>'
+		                html: info.html
+		              });
+				 locmarkers.push(locmarker);
+				 addEventsForLocMarker(locmarker);
+			}
+		}
 
 
       function dropLocMarkers() {
@@ -713,12 +766,13 @@ console.log("created");
         //console.log(titleinfo);
         window.setTimeout(function() {
           if (Session.get("role") == "rider"){
-            if(info[labelindex-1].role == "driver" || info[labelindex-1].role == "self"){
+            if(info[labelindex-1].role == "driver" || info[labelindex-1].isSelf){
                 locmarkers.push(new google.maps.Marker({
                 position: {lat: location.loc.coordinates[0], lng: location.loc.coordinates[1]},
                 animation: google.maps.Animation.DROP,
                 map: map.instance,
                 role: info[labelindex-1].role,
+                isSelf: info[labelindex-1].isSelf,
                 _id: location._id,
                 label: ""+info[labelindex-1].ride.who,
                 ride: info[labelindex-1].ride,
@@ -727,12 +781,13 @@ console.log("created");
               }));
           }
         } else {
-          if(info[labelindex-1].role == "rider" || info[labelindex-1].role == "self"){
+          if(info[labelindex-1].role == "rider" || info[labelindex-1].isSelf){
                 locmarkers.push(new google.maps.Marker({
                 position: {lat: location.loc.coordinates[0], lng: location.loc.coordinates[1]},
                 animation: google.maps.Animation.DROP,
                 map: map.instance,
                 role: info[labelindex-1].role,
+                isSelf: info[labelindex-1].isSelf,
                 _id: location._id,
                 label: ""+info[labelindex-1].ride.who,
                 ride: info[labelindex-1].ride,
@@ -774,6 +829,15 @@ console.log("created");
       function removeLocMarker(id){
       	for (i = 0; i < locmarkers.length; i++) {
       		if(locmarkers[i]._id == id){
+				locmarkers[i].setMap(null);
+				break;
+			}
+      	}
+      }
+
+      function remainLocMarkersByRole(role){
+      	for (i = 0; i < locmarkers.length; i++) {
+      		if(locmarkers[i].role != role){
 				locmarkers[i].setMap(null);
 				break;
 			}
@@ -841,16 +905,24 @@ console.log("created");
 
 	          google.maps.event.addListener(destmarker, 'click', function(){
 	          	console.log('click');
-	          	var confirmed = confirm(destmarker.title + " as location?");
-	            if(confirmed){
-	            	var destination = {
+	          	//var confirmed = confirm(destmarker.title + " as location?");
+	          	IonPopup.confirm({
+			      title: 'Are you sure?',
+			      template: "<strong>" + destmarker.title + "</strong>" + " as location?",
+			      onOk: function() {
+			        var destination = {
 	            		uid: Meteor.userId(),
 	            		destGeoloc: {type: "Point", coordinates: [destmarker.position.G, destmarker.position.K]},
-	            		destAddress: destmarker.title
+	            		destAddress: destmarker.title,
+	            		when: new Date()
 	            	} 
 	            	var destId = Destinations.insert(destination);
 	            	Session.setPersistent('destInfoId', destId);
-	            }
+			      },
+			      onCancel: function() {
+			        // do nothing
+			      }
+			    });
 	          });
 
 	          console.log(destmarker.position.G);
@@ -866,24 +938,43 @@ console.log("created");
 	    }
 
 
+     function ButtonGroup(controlDiv, map) {
 
-	function FinalizeButton(controlDiv, map) {
+        controlDiv.className = 'button-bar';
 
-        controlDiv.className = 'controls';
-        controlDiv.type = "button";
-        controlDiv.id = "finalize";
-        controlDiv.value = 'Finalize';
+        var refreshbutton = document.createElement('a');
+        refreshbutton.className = 'button button-balanced';
+        var refreshIcon = document.createElement('span');
+        refreshIcon.className = "ion-refresh";
+        refreshIcon.innerHTML = "&nbsp;Refresh";
+        refreshbutton.appendChild(refreshIcon);
 
-        controlDiv.addEventListener('click', function() {
-          console.log("click");
-          var sts = Statuses.findOne({driverId:Meteor.userId()}, {});
-          if (sts) {
-          	Session.setPersistent("shouldShowTrip", true);
-          	Router.go("tripinfo");
-          } else {
-          	Router.go("welcome");
-          }
-          Session.setPersistent("submitted", false);
+        if (Session.get("role") == "driver") {
+	        var finalizebutton = document.createElement('a');
+	        finalizebutton.className = 'button button-assertive';
+	        var finalizeIcon = document.createElement('span');
+	        finalizeIcon.className = "ion-model-s";
+	        finalizeIcon.innerHTML = "&nbsp;Finalize";
+	        finalizebutton.appendChild(finalizeIcon);
+
+	        controlDiv.appendChild(finalizebutton);
+
+	        finalizebutton.addEventListener('click', function() {   
+	          var sts = Statuses.findOne({driverId:Meteor.userId()}, {});
+	          if (sts) {
+	          	Session.setPersistent("shouldShowTrip", true);
+	          	Router.go("tripinfo");
+	          } else {
+	          	Router.go("welcome");
+	          }
+	          Session.setPersistent("submitted", false);
+	        });
+    	}
+
+        controlDiv.appendChild(refreshbutton);
+
+        refreshbutton.addEventListener('click', function() {
+          document.location.reload(true);
         });
       }
 
@@ -906,8 +997,6 @@ console.log("created");
         	call.clickCall();
         });
     }
-
-
 
 
       // Create call button
