@@ -928,14 +928,14 @@ Template.map.onCreated(function() {
 	            icon: icon,
 	            title: place.name,
 	            optimized: false,
-	            position: [place.geometry.location.lat(), place.geometry.location.lng()]
+	            position: place.geometry.location
 	          }));
 
 	          var destmarker = destmarkers[0];
-	          console.log(destmarker.title);
+	          //console.log(destmarker.title);
 
 	          google.maps.event.addListener(destmarker, 'click', function(){
-	          	console.log(destmarker.position);
+	          	//console.log(destmarker.position.lat());
 	          	//var confirmed = confirm(destmarker.title + " as location?");
 	          	IonPopup.confirm({
 			      title: 'Are you sure?',
@@ -943,12 +943,13 @@ Template.map.onCreated(function() {
 			      onOk: function() {
 			        var destination = {
 	            		uid: Meteor.userId(),
-	            		destGeoloc: {type: "Point", coordinates: destmarker.position},
+	            		destGeoloc: {type: "Point", coordinates: [destmarker.position.lat(), destmarker.position.lng()]},
 	            		destAddress: destmarker.title,
 	            		when: new Date()
 	            	}
-	            	if (typeof Destinations.findOne({uid: Meteor.userId()}, {}) != undefined ) { 
+	            	if (typeof Destinations.findOne({uid: Meteor.userId()}, {}) != "undefined" ) { 
 	            		var dest = Destinations.findOne({uid: Meteor.userId()}, {});
+	            		console.log(dest);
 	          			Destinations.update({_id: dest._id}, {$set: destination});
 	            	} else {
 	            		var destId = Destinations.insert(destination);
@@ -961,7 +962,7 @@ Template.map.onCreated(function() {
 			    });
 	          });
 
-	          console.log(destmarker.position.lat());
+	          //console.log(destmarker.position.lat());
 
 	          if (place.geometry.viewport) {
 	            // Only geocodes have viewport.
