@@ -455,11 +455,11 @@ Template.map.helpers({
 
 
 Template.map.onCreated(function() { 
-console.log("created"); 
+//console.log("created"); 
   var self = this;
 
   GoogleMaps.ready('map', function(map) {
-  	console.log("ready");
+  	//console.log("ready");
   	/* Central Button */
   	/*
   	self.find('.material-button-toggle').addEventListener('click', function(){
@@ -511,35 +511,57 @@ console.log("created");
 
     RideInfo.find().observeChanges({
     	changed: function(id, object) {
-    		//console.log("ridechange");
+    		console.log("ridechange");
     		var userId = RideInfo.findOne({_id: id}, {}).uid;
     		if (userId != Meteor.userId()) {
 	    		var geo = Geolocations.findOne({uid:userId}, {});
-	    		if (geo != undefined) {
-		    		if (object.status1 != Session.get("role")){
-		    			dropSingleLocMarker(geo._id, geo);
-		    		} else {
-		    			removeLocMarker(geo._id);
-		    		}
-	    		}
+	    		var dest = Destinations.findOne({uid:userId}, {});
+	    		console.log(geo);
+	    		if (object.direction == Session.get("direction")){
+	    			console.log("direction equal");
+			    	if (object.status1 != Session.get("role")){
+			    		if (geo != undefined) {
+			    			dropSingleLocMarker(geo._id, geo);
+			    		}
+			    		if (dest != undefined) {
+			    			dropSingleDestPin(dest._id, dest);
+			    		}
+			    	} else {
+			    		if (geo != undefined) {
+			    			removeLocMarker(geo._id);
+			    		}
+			    		if (dest != undefined) {
+			    			removeDestPin(dest._id);
+			    		}
+			    	}
+			    } else {
+			    	if (geo != undefined) {
+			    		removeLocMarker(geo._id);
+			    	}
+			    	if (dest != undefined) {
+			    		removeDestPin(dest._id);
+			    	}
+			    }
     		}
     	},
 		removed: function(id) {
+			var userId = RideInfo.findOne({_id: id}, {}).uid;
+			var geo = Geolocations.findOne({uid:userId}, {});
+	    	var dest = Destinations.findOne({uid:userId}, {});
 			//console.log("removed rideinfo");
-			locmarkers.forEach(function(locmarker, index){
-				if(locmarker.ride._id == id){
-					locmarker.setMap(null);
-				}
-			});
-
-			removeDestPin(id);
+			if (geo != undefined) {
+			    removeLocMarker(geo._id);
+			}
+			if (dest != undefined) {
+			    removeDestPin(dest._id);
+			}
 		}
 	});
 
 
 	Geolocations.find().observeChanges({
 		added: function(id, location) {
-			//console.log("added");
+			console.log("added");
 			dropSingleLocMarker(id, location);
 		},
 		changed: function(id, location) { // update marker position when changed
@@ -558,28 +580,35 @@ console.log("created");
 	});
 
 	Destinations.find().observeChanges({
-		added: function(id , dest){ /* drop destpins */
-			var ride = RideInfo.findOne({uid: dest.uid}, {});
-			//console.log(dest.uid);
-			if (Session.get("role") != ride.status1){
-				var destpin = new google.maps.Marker({
-		                position: {lat: dest.destGeoloc.coordinates[0], lng: dest.destGeoloc.coordinates[1]},
-		                map: map.instance,
-		                animation: google.maps.Animation.DROP,
-		                ride_id: ride._id,
-		                _id: id,
-		                icon: '/images/beachflag.png',
-		                role: ride.status1,
-		                html:'<p>'+dest.destAddress+'</p>'
-		              });
-				destpins.push(destpin);
-				addEventsForDestpin(destpin);
-			}
+		added: function(id, dest){ /* drop destpins */
+			dropSingleDestPin(id, dest);
 		},
 		removed: function(id){ /* remove destpin */
 			removeDestPin(id);
 		}
 	});
+
+
+	function dropSingleDestPin(id, dest){
+		var ride = RideInfo.findOne({uid: dest.uid}, {});
+			console.log(dest.destGeoloc);
+			if (Session.get("direction") == ride.direction) {
+				if (Session.get("role") != ride.status1){
+					var destpin = new google.maps.Marker({
+			                position: {lat: dest.destGeoloc.coordinates[0], lng: dest.destGeoloc.coordinates[1]},
+			                map: map.instance,
+			                animation: google.maps.Animation.DROP,
+			                ride_id: ride._id,
+			                _id: id,
+			                icon: '/images/beachflag.png',
+			                role: ride.status1,
+			                html:'<p>'+dest.destAddress+'</p>'
+			              });
+					destpins.push(destpin);
+					addEventsForDestpin(destpin);
+				}
+			}
+	}
 
 
 	function dropDestPins(){
@@ -729,23 +758,25 @@ console.log("created");
 
       function dropSingleLocMarker(id, location) {
 			 var info = generateHTML(location.uid);
-			 if ((Session.get("role") != info.role) || info.isSelf){
-			 	//console.log(info.role);
-			 	//console.log(" one time "+ info.role + info.isSelf);
-				 var locmarker = new google.maps.Marker({
-		                position: {lat: location.loc.coordinates[0], lng: location.loc.coordinates[1]},
-		                animation: google.maps.Animation.DROP,
-		                map: map.instance,
-		                role: info.role,
-		                isSelf: info.isSelf,
-		                _id: location._id,
-		                label: ""+info.ride.who,
-		                ride: info.ride,
-		                //html: '<div id="infowindow'+labelindex+'>'+info[labelindex-1]+'</div>'
-		                html: info.html
-		              });
-				 locmarkers.push(locmarker);
-				 addEventsForLocMarker(locmarker);
+			 if (Session.get("direction") == info.ride.direction) {
+				 if ((Session.get("role") != info.role) || info.isSelf){
+				 	//console.log(info.role);
+				 	//console.log(" one time "+ info.role + info.isSelf);
+					 var locmarker = new google.maps.Marker({
+			                position: {lat: location.loc.coordinates[0], lng: location.loc.coordinates[1]},
+			                animation: google.maps.Animation.DROP,
+			                map: map.instance,
+			                role: info.role,
+			                isSelf: info.isSelf,
+			                _id: location._id,
+			                label: ""+info.ride.who,
+			                ride: info.ride,
+			                //html: '<div id="infowindow'+labelindex+'>'+info[labelindex-1]+'</div>'
+			                html: info.html
+			              });
+					 locmarkers.push(locmarker);
+					 addEventsForLocMarker(locmarker);
+				}
 			}
 		}
 
@@ -897,14 +928,14 @@ console.log("created");
 	            icon: icon,
 	            title: place.name,
 	            optimized: false,
-	            position: place.geometry.location
+	            position: [place.geometry.location.lat(), place.geometry.location.lng()]
 	          }));
 
 	          var destmarker = destmarkers[0];
 	          console.log(destmarker.title);
 
 	          google.maps.event.addListener(destmarker, 'click', function(){
-	          	console.log('click');
+	          	console.log(destmarker.position);
 	          	//var confirmed = confirm(destmarker.title + " as location?");
 	          	IonPopup.confirm({
 			      title: 'Are you sure?',
@@ -912,11 +943,16 @@ console.log("created");
 			      onOk: function() {
 			        var destination = {
 	            		uid: Meteor.userId(),
-	            		destGeoloc: {type: "Point", coordinates: [destmarker.position.G, destmarker.position.K]},
+	            		destGeoloc: {type: "Point", coordinates: destmarker.position},
 	            		destAddress: destmarker.title,
 	            		when: new Date()
-	            	} 
-	            	var destId = Destinations.insert(destination);
+	            	}
+	            	if (typeof Destinations.findOne({uid: Meteor.userId()}, {}) != undefined ) { 
+	            		var dest = Destinations.findOne({uid: Meteor.userId()}, {});
+	          			Destinations.update({_id: dest._id}, {$set: destination});
+	            	} else {
+	            		var destId = Destinations.insert(destination);
+	            	}
 	            	Session.setPersistent('destInfoId', destId);
 			      },
 			      onCancel: function() {
@@ -925,7 +961,7 @@ console.log("created");
 			    });
 	          });
 
-	          console.log(destmarker.position.G);
+	          console.log(destmarker.position.lat());
 
 	          if (place.geometry.viewport) {
 	            // Only geocodes have viewport.
@@ -963,6 +999,10 @@ console.log("created");
 	          var sts = Statuses.findOne({driverId:Meteor.userId()}, {});
 	          if (sts) {
 	          	Session.setPersistent("shouldShowTrip", true);
+	          	if (Session.get("reqId") !== null || Session.get("reqId") != undefined){
+						Requests.remove(Session.get("reqId"));
+						Session.set("reqId", null);
+					}
 	          	Router.go("tripinfo");
 	          } else {
 	          	Router.go("welcome");

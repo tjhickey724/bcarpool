@@ -25,6 +25,7 @@ Template.infoform.rendered = function(){
 		}
 	});
 
+	/*
 	if (Session.get("geolocInfoId") !== null || Session.get("geolocInfoId") != undefined){
     			//console.log(Session.get("geolocInfoId"));
 		    	 Geolocations.remove(Session.get("geolocInfoId"));
@@ -34,6 +35,7 @@ Template.infoform.rendered = function(){
 		    	Destinations.remove(Session.get("destInfoId"));
 		    	Session.set("destInfoId", null);
 		    }
+	*/
 }
 
 

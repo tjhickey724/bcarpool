@@ -24,18 +24,16 @@ Template.triprow.events({
 })
 
 Template.tripinfo.rendered = function(){
+	/*
 	if (Session.get("geolocInfoId") !== null || Session.get("geolocInfoId") != undefined){
     	 Geolocations.remove(Session.get("geolocInfoId"));
     	 Session.set("geolocInfoId", null);
     }
+    */
     /*
     if (Session.get("destInfoId") !== null || Session.get("destInfoId") != undefined){
     	Destinations.remove(Session.get("destInfoId"));
     	Session.set("destInfoId", null);
     }
     */
-    if (Session.get("reqId") !== null || Session.get("reqId") != undefined){
-		Requests.remove(Session.get("reqId"));
-		Session.set("reqId", null);
-	}
 }
