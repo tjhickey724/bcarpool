@@ -96,10 +96,20 @@
 		</div>
 </section>
 -->
+<!--
+<div class="list">
+  {{#ionRadio name="role" id="driver"}}
+  I can offer a ride
+  {{/ionRadio}}
+  {{#ionRadio name="role" id="rider"}}
+  I need a ride
+  {{/ionRadio}}
+</div>
+-->
+
 
     <div class="list">
-
-    <label class="item item-radio">
+      <label class="item item-radio">
       <input type="radio" name="role" id="driver">
       <div class="item-content ion-model-s">
         I can offer a ride
@@ -120,6 +130,7 @@
 
 
   </div>
+
   <a class="button button-large button-positive button-block" id="role-next" href="{{pathFor 'where'}}">Confirm & Next</a>
   {{/ionContent}}
   {{/ionView}}
