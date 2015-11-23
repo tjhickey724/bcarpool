@@ -12,6 +12,14 @@
 
   {{#contentFor "headerTitle"}}
     <h1 class="title">Map View</h1>
+   <!-- <button class="button button-clear pull-right" data-ion-menu-toggle="right">-->
+    <button class="button button-clear pull-right" data-ion-modal="tripinfo">
+      {{#if isAndroid}}
+        {{> ionIcon icon='android-more-vertical'}}
+      {{else}}
+        {{> ionIcon icon='navicon'}}
+      {{/if}}
+    </button>
   {{/contentFor}}
 
   {{#ionView}}
@@ -19,7 +27,7 @@
     {{#if shouldShowMap}}
   <div class="map-container" id="map-canvas">
     {{#unless geolocationError}}
-      <input id="pac-input" class="controls" type="text" placeholder="Search Box">
+      <input id="pac-input" class="controls" type="text" autocomplete="off" placeholder="Search Box">
       {{> googleMap name="map" options=mapOptions}}
     {{else}}
       Geolocation failed: {{geolocationError}}
@@ -55,15 +63,14 @@
           </div>
       </div>
     </div>
--->
 
+  -->
   {{/if}}
   
   {{> statusinfo}}
 	{{> requestinfo}}
 	
 	{{> rideinfo}}
-
   {{/ionContent}}
   {{/ionView}}
 </template>

@@ -10,10 +10,6 @@ Template.layout.helpers({
 	},
 	shouldShowMapTab: function(){
 		return (Meteor.userId() && Session.get("submitted"))?true:false;
-	},
-
-	shouldShowTripTab: function(){
-		return Session.get("shouldShowTrip");
 	}
 });
 

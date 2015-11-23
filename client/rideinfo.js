@@ -1,7 +1,7 @@
 var MAP_ZOOM = 15;
 
 Meteor.startup(function() { 
-  GoogleMaps.load({v:'3', key: 'AIzaSyA-dw_b_tu3Y-BYBS9B6WV0zHK2_OuN0QI', libraries: 'geometry,places'});
+  GoogleMaps.load({v:'3.22', key: 'AIzaSyA-dw_b_tu3Y-BYBS9B6WV0zHK2_OuN0QI', libraries: 'geometry,places'});
   //Geolocations._ensureIndex({loc: "2dsphere"})
 });
 
@@ -10,10 +10,11 @@ cursor.observeChanges({
 	added: function(id, object) {
 		if (object.receiverId == Meteor.userId()) {
 				if (object.theStatus == "pending") {
-					var name = RideInfo.findOne({uid:object.senderId}, {}).who;
+					var ride = RideInfo.findOne({uid:object.senderId}, {});
+					var myself = Session.get("ride");
 					IonPopup.confirm({
 				      title: 'Request',
-				      template: "<strong>" + name + "</strong>" + " send you a request: \n" + object.message,
+				      template: "<strong>" + ride.who + "</strong>" + " send you a request: \n" + object.message,
 				      onOk: function() {
 				      	object.theStatus = "confirmed";
 						if (object.senderIsRider) {
@@ -34,6 +35,57 @@ cursor.observeChanges({
 							};
 							//var driverInfo = RideInfo.findOne({uid: object.senderId}, {});
 						}
+						var destAddress1;
+						var destAddress2;
+						if (Destinations.findOne({uid:ride.uid}, {}) == undefined){
+							destAddress1 = "N/A";
+						} else {
+							destAddress1 = Destinations.findOne({uid:ride.uid}, {}).destAddress;
+						}
+						if (Destinations.findOne({uid:Meteor.userId()}, {}) == undefined){
+							destAddress2 = "N/A";
+						} else {
+							destAddress2 = Destinations.findOne({uid:Meteor.userId()}, {}).destAddress;
+						}
+						var trip1 = {
+								uid: Meteor.userId(),
+								partnerId: ride.uid,
+								name: ride.who, 
+								phone: ride.phone, 
+								dest: destAddress1, 
+								when: new Date()};
+						var trip2 = {
+								uid: ride.uid,
+								partnerId: Meteor.userId(),
+								name: myself.who, 
+								phone: myself.phone, 
+								dest: destAddress2, 
+								when: new Date()};
+						Trips.insert(trip1);
+						Trips.insert(trip2);
+						var guestRole = "";
+						if (Session.get("role") == "driver"){
+							guestRole = "rider";
+						} else if (Session.get("role") == "rider") {
+							guestRole = "driver";
+						}
+						var history1 = {
+								uid: Meteor.userId(),
+								name: ride.who,
+								role:  guestRole,
+								phone: ride.phone, 
+								dest: destAddress1, 
+								when: new Date()};
+						var history2 = {
+								uid: ride.uid,
+								name: myself.who,
+								role:  Session.get("role"),
+								phone: myself.phone, 
+								dest: destAddress2, 
+								when: new Date()};
+						Historys.insert(history1);
+						Historys.insert(history2);
+
 						var stsId = Statuses.insert(sts);
 						Session.setPersistent("statusInfoId", stsId);
 						object.when = new Date();
@@ -483,6 +535,7 @@ Template.map.onCreated(function() {
     } else {
     	$("#pac-input").prop("disabled", false);
     }
+    //$("#pac-input").attr('data-tap-disabled', true);
     /*
     var circle_menu = self.find("#circle-menu");
     map.instance.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(circle_menu);
@@ -894,8 +947,11 @@ Template.map.onCreated(function() {
 	      });
 
 	      var destmarkers = [];
-
-	      google.maps.event.addListener(searchBox, 'places_changed', function() {
+	      console.log("setup");
+	      
+	      //google.maps.event.addListener(searchBox, 'places_changed', function() {
+	      searchBox.addListener('places_changed', function(){
+	      	console.log("places_changed");
 	        var places = searchBox.getPlaces();
 
 	        if (places.length == 0) {
@@ -927,7 +983,6 @@ Template.map.onCreated(function() {
 	            map: map.instance,
 	            icon: icon,
 	            title: place.name,
-	            optimized: false,
 	            position: place.geometry.location
 	          }));
 
@@ -986,6 +1041,24 @@ Template.map.onCreated(function() {
         refreshIcon.innerHTML = "&nbsp;Refresh";
         refreshbutton.appendChild(refreshIcon);
 
+
+        var followbutton = document.createElement('a');
+        followbutton.className = 'button button-positive';
+        var followIcon = document.createElement('span');
+        followIcon.className = "ion-navigate";
+        followIcon.innerHTML = "&nbsp;Following";
+        followbutton.appendChild(followIcon);
+        /*
+        var selectbutton = document.createElement('a');
+        selectbutton.className = 'button button-positive';
+        selectbutton.innerHTML = "Select";
+
+        selectbutton.addEventListener('click', function(){
+        	google.maps.event.trigger(searchBox, 'places_changed', {});
+        });
+		*/
+
+
         if (Session.get("role") == "driver") {
 	        var finalizebutton = document.createElement('a');
 	        finalizebutton.className = 'button button-assertive';
@@ -999,24 +1072,56 @@ Template.map.onCreated(function() {
 	        finalizebutton.addEventListener('click', function() {   
 	          var sts = Statuses.findOne({driverId:Meteor.userId()}, {});
 	          if (sts) {
-	          	Session.setPersistent("shouldShowTrip", true);
 	          	if (Session.get("reqId") !== null || Session.get("reqId") != undefined){
 						Requests.remove(Session.get("reqId"));
 						Session.set("reqId", null);
 					}
-	          	Router.go("tripinfo");
-	          } else {
-	          	Router.go("welcome");
 	          }
+	          var trip1 = Trips.find({uid: Meteor.userId()}, {});
+	          trip1.forEach(function(thetrip, index){
+	          	if (Session.get("destInfoId")){
+	          		Destinations.remove(Session.get("destInfoId"));
+	          	}
+	          	if (Destinations.findOne({uid: thetrip.partnerId}, {}) != undefined){
+	          		Destinations.remove(Destinations.findOne({uid: thetrip.partnerId}, {})._id);
+	          	}
+	          	Statuses.remove(Session.get("statusInfoId"));
+	          	 var trip2 = Trips.find({$and: [{uid: thetrip.partnerId}, {partnerId: thetrip.uid}]}, {});
+	          	 trip2.forEach(function(thetrip2, idx){
+	          	 	Trips.remove(thetrip2._id);
+	          	 });
+	          	Trips.remove(thetrip._id);
+	          });
+	          Router.go("welcome");
 	          Session.setPersistent("submitted", false);
 	        });
     	}
 
-        controlDiv.appendChild(refreshbutton);
-
         refreshbutton.addEventListener('click', function() {
           document.location.reload(true);
         });
+
+        followbutton.addEventListener('click', function() {
+        	if(Session.get("follow")){
+        		Session.setPersistent("follow", false);
+        		$(this).removeClass("button-positive");
+        		$(this).addClass("button-energized");
+        		$(this).find('span').html("&nbsp;Roaming");
+        		$(this).find('span').removeClass('ion-navigate');
+        		$(this).find('span').addClass('ion-earth');
+        	} else {
+        		Session.setPersistent("follow", true);
+        		$(this).removeClass("button-energized");
+        		$(this).addClass("button-positive");
+        		$(this).find('span').html("&nbsp;Following");
+        		$(this).find('span').removeClass('ion-earth');
+        		$(this).find('span').addClass('ion-navigate');
+        	}
+        });
+
+        controlDiv.appendChild(refreshbutton);
+        controlDiv.appendChild(followbutton);
+        //controlDiv.appendChild(selectbutton);
       }
 
 
@@ -1068,8 +1173,10 @@ Template.map.onCreated(function() {
 	      Session.setPersistent("geolocInfoId", Geolocations.findOne({uid: Meteor.userId()}, {})._id);
       }
       // Center and zoom the map view onto the current position.
-      map.instance.setCenter(currentPosition);
-      map.instance.setZoom(MAP_ZOOM);
+      if (Session.get("follow")){
+	      map.instance.setCenter(currentPosition);
+	      map.instance.setZoom(MAP_ZOOM);
+  		}
     });
   });
 });

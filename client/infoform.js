@@ -162,6 +162,3 @@ Template.where.events({
 	}
 });
 
-
-Template.done.events({
-});

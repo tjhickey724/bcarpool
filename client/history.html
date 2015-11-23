@@ -1,4 +1,4 @@
-<template name="tripinfo">
+<template name="historyinfo">
 	{{#contentFor "headerButtonLeft"}}
               <button class="button button-clear pull-left" data-ion-menu-toggle="left">
                 {{#if isAndroid}}
@@ -10,7 +10,7 @@
             {{/contentFor}}
 
   {{#contentFor "headerTitle"}}
-    <h1 class="title">Passenger Info</h1>
+    <h1 class="title">History</h1>
   {{/contentFor}}
 
   {{#ionView}}
@@ -18,11 +18,11 @@
 	<h1>Passenger Info</h1>
 	<table class="table table-striped">
 		<thead>
-			<tr><th>Passenger Name</th><th>Phone</th><th>Address</th><th>When</th><th>Delete</th></tr>
+			<tr><th>Passenger Name</th><th>Role</th><th>Phone</th><th>Address</th><th>When</th><th>Delete</th></tr>
 		</thead>
 		<tbody>
-			{{#each trips}}
-			{{> triprow}}
+			{{#each historys}}
+			{{> historyrow}}
 			{{/each}}
 		</tbody>
 	</table>
@@ -31,14 +31,15 @@
 	
 </template>
 
-<template name="triprow">
+<template name="historyrow">
 			<tr>
 				<td>{{name}}</td>
+				<td>{{role}}</td>
 				<td>{{phone}}</td>
 				<td>{{dest}}</td>
 				<td>{{when}}</td>
 				<td>
-					<span class="glyphicon glyphicon-remove deltrip" aria-hidden="true"></span> 
+					<span class="glyphicon glyphicon-remove delhist" aria-hidden="true"></span> 
 				</td>
 			</tr>
 </template>

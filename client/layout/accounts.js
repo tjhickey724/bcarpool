@@ -3,12 +3,12 @@ Deps.autorun(function(computation){
   var currentUser=Meteor.user();
   if(currentUser){
     //console.log(Session.get("loggedIn"));
+    Session.setPersistent("follow", true);
   }
   else if(!computation.firstRun){
     Session.set("role",null);
     Session.set("direction",null);
     Session.set("numSeats", null);
-    Session.set("shouldShowTrip", false);
     RideInfo.remove(Session.get("rideinfoId"));
     Geolocations.remove(Session.get("geolocInfoId"));
     Destinations.remove(Session.get("destInfoId"));
@@ -20,6 +20,7 @@ Deps.autorun(function(computation){
     Session.set("reqId", null);
     Session.set("ride", null);
     Session.set("submitted", false);
+    Session.set("follow", false);
     //console.log(Session.get("loggedIn"));
   }
 });

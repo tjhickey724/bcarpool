@@ -1,0 +1,32 @@
+<template name="tripinfo">
+  {{#ionModal title="Passenger Info"}}
+    <div class="padding">
+      
+    	<h1>Passenger Info</h1>
+		<table class="table table-striped">
+		<thead>
+			<tr><th>Passenger Name</th><th>Phone</th><th>Address</th><th>When</th><th>Delete</th></tr>
+		</thead>
+		<tbody>
+			{{#each trips}}
+			{{> triprow}}
+			{{/each}}
+		</tbody>
+	</table>
+
+    </div>
+  {{/ionModal}}
+</template>
+
+
+<template name="triprow">
+			<tr>
+				<td>{{name}}</td>
+				<td>{{phone}}</td>
+				<td>{{dest}}</td>
+				<td>{{when}}</td>
+				<td>
+					<span class="glyphicon glyphicon-remove deltrip" aria-hidden="true"></span> 
+				</td>
+			</tr>
+</template>
