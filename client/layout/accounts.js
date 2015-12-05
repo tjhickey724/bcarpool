@@ -1,29 +1,25 @@
-
-Deps.autorun(function(computation){
-  var currentUser=Meteor.user();
-  if(currentUser){
-    //console.log(Session.get("loggedIn"));
-    Session.setPersistent("follow", true);
-  }
-  else if(!computation.firstRun){
-    Session.set("role",null);
-    Session.set("direction",null);
-    Session.set("numSeats", null);
-    RideInfo.remove(Session.get("rideinfoId"));
-    Geolocations.remove(Session.get("geolocInfoId"));
-    Destinations.remove(Session.get("destInfoId"));
-    Requests.remove(Session.get("reqId"));
-    Statuses.remove(Session.get("statusInfoId"));
-    Session.set("rideinfoId", null);
-    Session.set("geolocInfoId", null);
-    Session.set("destInfoId", null);
-    Session.set("reqId", null);
-    Session.set("ride", null);
-    Session.set("submitted", false);
-    Session.set("follow", false);
-    //console.log(Session.get("loggedIn"));
-  }
-});
+if (Meteor.isClient) {
+    Tracker.autorun(function(computation){
+      var currentUser=Meteor.user();
+      if(currentUser){
+        //console.log(Session.get("loggedIn"));
+        Session.setPersistent("follow", true);
+      }
+      else if(!computation.firstRun){
+        Session.set("role",null);
+        Session.set("direction",null);
+        Session.set("numSeats", null);
+        Session.set("timechoice", null);
+        Session.set("time", null);
+        Session.set("ride", null);
+        Session.set("submitted", false);
+        Session.set("follow", false);
+        Session.set("place", null);
+        Session.set("place_location", null);
+        //console.log(Session.get("loggedIn"));
+      }
+    });
+}
 
 
 AccountsTemplates.configure({

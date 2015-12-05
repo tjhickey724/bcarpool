@@ -24,7 +24,6 @@ Template.infoform.rendered = function(){
 			$('#role-next').attr('disabled', true);
 		}
 	});
-
 	/*
 	if (Session.get("geolocInfoId") !== null || Session.get("geolocInfoId") != undefined){
     			//console.log(Session.get("geolocInfoId"));
@@ -78,12 +77,12 @@ Template.infoform.events({
 Template.where.rendered = function(){
 	if (Session.get("direction") == "to") {
 		$('#coming').prop('checked', true);
-		$('#complete-info').attr('disabled', false);
+		$('#where-next').attr('disabled', false);
 	} else if (Session.get("direction") == "from") {
 		$('#leaving').prop('checked', true);
-		$('#complete-info').attr('disabled', false);
+		$('#where-next').attr('disabled', false);
 	} else {
-		$('#complete-info').attr('disabled', true);
+		$('#where-next').attr('disabled', true);
 	}
 }
 
@@ -91,15 +90,42 @@ Template.where.rendered = function(){
 Template.where.events({
 	"click #leaving": function(event){
 		Session.setPersistent("direction","from");
-		$('#complete-info').attr('disabled', false);
+		$('#where-next').attr('disabled', false);
 	},
 	"click #coming": function(event){
 		Session.setPersistent("direction","to");
+		$('#where-next').attr('disabled', false);
+	}
+});
+
+
+Template.when.rendered = function(){
+	if (Session.get("time") == "now") {
+		$('#now').prop('checked', true);
 		$('#complete-info').attr('disabled', false);
+	} else if (Session.get("time") == "later") {
+		$('#now').prop('checked', true);
+		$('#complete-info').attr('disabled', false);
+	} else {
+		$('#complete-info').attr('disabled', true);
+	}
+}
+
+Template.when.events({
+	"click #now": function(event){
+		Session.setPersistent("timechoice", "now");
+		Session.setPersistent("time", null);
+		$('#complete-info').attr('disabled', false);
+	},
+	"click #later": function(event){
+		Session.setPersistent('timechoice', "later");
+		$('#complete-info').attr('disabled', true);
+		IonModal.open('timepickermodal');
 	},
 	"click #complete-info": function(event){
 		console.log("submitted");
 		Session.setPersistent("submitted", true);
+		var time;
 		
 		//event.preventDefault();
 
@@ -107,6 +133,13 @@ Template.where.events({
 			// generate an error message/warning on the page ...
 			return;
 		}
+
+		if (Session.get("timechoice") == "now"){
+			time = moment().toDate();
+		} else {
+			time = Session.get("time");
+		}
+		console.log(time);
 
 		//var location = event.target.location.value;
 		
@@ -121,44 +154,17 @@ Template.where.events({
 				carSpace:Session.get("numSeats"),
 				status1:Session.get("role"),
 				direction:Session.get("direction"),
-				when: new Date()
+				when:time
 			};
 
-		if (! Meteor.userId()) {
-	      throw new Meteor.Error("not-authorized");
-	    }
-
-	    if (typeof RideInfo.findOne({uid:Meteor.userId()}, {}) != "undefined")
-           RideInfo.update({_id:RideInfo.findOne({uid:Meteor.userId()}, {})._id}, {$set:ride});
-        else
-           RideInfo.insert(ride);
-
-        Session.setPersistent("rideinfoId", RideInfo.findOne({uid:Meteor.userId()}, {})._id);
-
-		Session.setPersistent("ride", ride);
-		console.dir(ride);
-		//Meteor.call("insertRideInfo", ride);
-		//Router.go('map');
-
-		/*
-		var x = $("#chatinput").val()
-		
-		$("#chatinput").val("");
-
-		var profile = Meteor.user().profile;
-		
-		var chatline = 
-		  	{
-				uid:Meteor.userId(),  
-				who:profile["firstName"]+" "+profile["lastName"], 
-				what:x,
-				when: new Date()
-			};
-			
-		console.dir(chatline);
-		
-		ChatLines.insert(chatline);
-		*/
+        Meteor.apply('checkAndUpdateRideInfo', [ride], {wait:true}, function(err, result){
+        	if (!err) {
+        		Session.setPersistent("rideInfoId", result);
+        		Session.setPersistent("ride", ride);
+				console.dir(ride);
+        	}
+        });
 	}
 });
+
 

@@ -27,7 +27,7 @@
     {{#if shouldShowMap}}
   <div class="map-container" id="map-canvas">
     {{#unless geolocationError}}
-      <input id="pac-input" class="controls" type="text" autocomplete="off" placeholder="Search Box">
+      <input id="pac-input" class="controls" type="text" autocomplete="off" placeholder="Enter Your Destination">
       {{> googleMap name="map" options=mapOptions}}
     {{else}}
       Geolocation failed: {{geolocationError}}
@@ -66,11 +66,7 @@
 
   -->
   {{/if}}
-  
-  {{> statusinfo}}
-	{{> requestinfo}}
-	
-	{{> rideinfo}}
+  {{> requestinfo}}
   {{/ionContent}}
   {{/ionView}}
 </template>

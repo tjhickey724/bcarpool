@@ -16,6 +16,24 @@ Template.layout.helpers({
 Template.layout.events({
 	"click .logout": function(event){
 		event.preventDefault();
+		Meteor.apply('logoutClear', 
+            [[Session.get("rideInfoId"), 
+             Session.get("geolocInfoId"), 
+             Session.get("destInfoId"),
+             Session.get("reqId"),
+             Session.get("statusInfoId")]
+            ], 
+            {wait:true}, 
+            function(err, result){
+                if (!err) {
+                    console.log(result);
+                    Session.set("rideInfoId", null);
+                    Session.set("geolocInfoId", null);
+                    Session.set("destInfoId", null);
+                    Session.set("reqId", null);
+                    Session.get("statusInfoId", null);
+                }
+            });
 		Meteor.logout();
 		Router.go('welcome');
 	}

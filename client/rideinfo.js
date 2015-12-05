@@ -1,16 +1,11 @@
 var MAP_ZOOM = 15;
 
-Meteor.startup(function() { 
-  GoogleMaps.load({v:'3.22', key: 'AIzaSyA-dw_b_tu3Y-BYBS9B6WV0zHK2_OuN0QI', libraries: 'geometry,places'});
-  //Geolocations._ensureIndex({loc: "2dsphere"})
-});
-
 var cursor = Requests.find();
 cursor.observeChanges({
 	added: function(id, object) {
 		if (object.receiverId == Meteor.userId()) {
 				if (object.theStatus == "pending") {
-					var ride = RideInfo.findOne({uid:object.senderId}, {});
+					var ride = RideInfo.findOne({uid: object.senderId}, {});
 					var myself = Session.get("ride");
 					IonPopup.confirm({
 				      title: 'Request',
@@ -61,8 +56,16 @@ cursor.observeChanges({
 								phone: myself.phone, 
 								dest: destAddress2, 
 								when: new Date()};
-						Trips.insert(trip1);
-						Trips.insert(trip2);
+						Meteor.apply('insertTrip', [trip1], [], function(err, result){
+							if(!err){
+								//do something
+							}
+						});
+						Meteor.apply('insertTrip', [trip2], [], function(err, result){
+							if(!err){
+								//do something
+							}
+						});
 						var guestRole = "";
 						if (Session.get("role") == "driver"){
 							guestRole = "rider";
@@ -71,6 +74,7 @@ cursor.observeChanges({
 						}
 						var history1 = {
 								uid: Meteor.userId(),
+								partnerId: ride.uid,
 								name: ride.who,
 								role:  guestRole,
 								phone: ride.phone, 
@@ -78,33 +82,56 @@ cursor.observeChanges({
 								when: new Date()};
 						var history2 = {
 								uid: ride.uid,
+								partnerId: myself.uid,
 								name: myself.who,
 								role:  Session.get("role"),
 								phone: myself.phone, 
 								dest: destAddress2, 
 								when: new Date()};
-						Historys.insert(history1);
-						Historys.insert(history2);
+						Meteor.apply('insertHistory', [history1], [], function(err, result){
+							if(!err){
+								//do something
+							}
+						});
+						Meteor.apply('insertHistory', [history2], [], function(err, result){
+							if(!err){
+								//do something
+							}
+						});
 
-						var stsId = Statuses.insert(sts);
-						Session.setPersistent("statusInfoId", stsId);
+						Meteor.apply('insertStatus', [sts], [], function(err, result){
+							if(!err){
+								Session.setPersistent("statusInfoId", result);
+							}
+						});
 						object.when = new Date();
-						Requests.update({_id:id}, {$set:object});
+						Meteor.apply('updateRequest', [id, object], [], function(err, result){
+							if(!err){
+								//do something
+							}
+						});
 				      },
 				      onCancel: function() {
 				        object.theStatus = "rejected";
+				        var driverInfo;
 						if (object.senderIsRider) {
 							var driverInfo = RideInfo.findOne({uid: object.receiverId}, {});
 						} else {
 							var driverInfo = RideInfo.findOne({uid: object.senderId}, {});
 						}
-
 						var driverId = driverInfo._id;
-						delete driverInfo['_id'];
-						driverInfo.carSpace += 1;
-						RideInfo.update({_id:driverId}, {$set:driverInfo});
+						var space = driverInfo.carSpace + 1;
+						Meteor.apply('updateRideInfo', [driverId, {carSpace: space}], [], function(err, result){
+							if(!err){
+								//do something
+							}
+						});
 						object.when = new Date();
-						Requests.update({_id:id}, {$set:object});
+						Meteor.apply('updateRequest', [id, object], [], function(err, result){
+							if(!err){
+								//do something
+							}
+						});
 				      }
 				    });
 				}
@@ -113,371 +140,15 @@ cursor.observeChanges({
 	}
 });
 
-/*getter functions merged from rideinfo*/
 
-//status info helpers
-function statusHelpers(){
-	this.statuses = function (){
-		return Statuses.find({},{sort:{when:-1}})
-	};
-}
-
-//requestinfo helpers
-function requestinfoHelpers(){
-	this.received = function (){
-		return typeof Requests.findOne({receiverId: Meteor.userId()}, {}) != "undefined" || typeof Requests.findOne({senderId: Meteor.userId()}, {}) != "undefined"
-	};
-
-	this.receivedContent = function (){
-		var request1 = Requests.find({receiverId: Meteor.userId()}, {sort:{when:-1}});
-		var request2 = Requests.find({senderId: Meteor.userId()}, {sort:{when:-1}});
-		if (request1.count() != 0) {
-			return request1;
-		} else if (request2.count() != 0){
-			return request2;
-		} else {
-			return null;
-		}
-	};
-}
-
-//requestrow helpers
-function requestrowHelper(){
-	this.shouldShowComplete = function (){
-		if ((Meteor.userId() == this.receiverId && this.senderIsRider && this.theStatus == "confirmed") || (Meteor.userId() == this.senderId && !this.senderIsRider && this.theStatus == "confirmed")){
-			return true;
-		} else {
-			return false;
-		}
-	};
-}
-
-//rideinfo helpers
-function rideinfoHelpers(){
-	this.isLeaving = function (){return Session.get("direction")=="from"};
-	this.isComing = function (){return  Session.get("direction")=="to"};
-	this.rideto = function (){
-		return RideInfo.find(
-				{direction:"to"},
-				
-				{sort:{destAddress:1,status1:1,when:-1}}
-			)
-	};
-
-	this.ridefrom = function (){
-		return RideInfo.find(
-				{direction:"from"},
-				
-				{sort:{destAddress:1,status1:1,when:-1}}
-			)
-	};
-}
-
-//ridetorow helpers
-function ridetorowHelpers(rowInfo){
-	this.shouldShowDelete = function (){
-		return rowInfo.uid==Meteor.userId()
-	};
-
-
-	this.match = function (){
-		if (typeof RideInfo.findOne({uid:Meteor.userId()}, {}) != "undefined") {
-			var currentLocation = RideInfo.findOne({uid:Meteor.userId()}, {}).location;
-			return rowInfo.location == currentLocation && rowInfo.uid != Meteor.userId();
-		}
-		else
-			return false;
-	};
-
-	this.shouldShowRequest = function (){
-		if (Session.get("role") == "driver") {
-				var riderId = rowInfo.uid;
-				var driverId = Meteor.userId();
-			} else if (Session.get("role") == "rider") {
-				var riderId = Meteor.userId();
-				var driverId = rowInfo.uid;
-			}
-			if (Session.get("role") == "driver") {
-				if (rowInfo.status1 == "rider") {
-					if (Requests.find({$and: [{senderId: Meteor.userId()}, {receiverId: rowInfo.uid}, {theStatus: "pending"}]}, {}).count() != 0 || Statuses.find({$and: [{riderId: rowInfo.uid}, {driverId: Meteor.userId()}, {theStatus: "riding"}]}, {}).count() != 0) {
-						console.log("here");
-						return false;
-					} else {
-						return true;
-					}
-				}else {
-					return false
-				}
-			} else if (Session.get("role") == "rider") {
-				if (Requests.find({$and: [{senderId: Meteor.userId()}, {theStatus: "pending"}]}, {}).count() != 0 || Statuses.find({$and: [{riderId: Meteor.userId()}, {theStatus: "riding"}]}, {}).count() != 0){
-					return false;
-				} else {
-					return true;
-				}
-			} else {
-				return false;
-			}
-	};
-
-	this.shouldShowPhone = function (){
-		if (Session.get("role") == "driver") {
-				var riderId = rowInfo.uid;
-				var driverId = Meteor.userId();
-			} else if (Session.get("role") == "rider") {
-				var riderId = Meteor.userId();
-				var driverId = rowInfo.uid;
-			}
-
-			if (Requests.find({$and: [{senderId: Meteor.userId()}, {receiverId: rowInfo.uid}, {theStatus: "pending"}]}, {}).count() != 0 || Statuses.find({$and: [{riderId: riderId}, {driverId: driverId}, {theStatus: "riding"}]}, {}).count() != 0){
-				return true;
-			} else {
-				return false;
-			}
-	};
-}
-
-function ridetorowEvents(rowInfo){
-	this.clickDelete = function (){
-		console.dir(rowInfo);
-		RideInfo.remove(rowInfo._id);
-	};
-
-	this.clickCall = function(){
-		 IonPopup.alert({
-	      title: "<strong>" + rowInfo.who + "</strong>" + '\'s' + " phone number",
-	      template: rowInfo.phone,
-	      okText: 'Got It.'
-	    });
-	};
-
-	this.clickRequest = function (){
-		var msg = "";
-		var senderIsRider = true;
-		if (rowInfo.status1 == "driver") {
-			msg = "Can you pick me up?";
-			senderIsRider = true;
-			var driverInfo = RideInfo.findOne({uid: rowInfo.uid}, {});
-		} else if (rowInfo.status1 == "rider") {
-			msg = "I want to pick you up.";
-			senderIsRider = false;
-			var driverInfo = RideInfo.findOne({uid: Meteor.userId()}, {});
-		}
-			
-		if (driverInfo.carSpace > 0) {
-			driverInfo.carSpace -= 1;
-		} else {
-			driverInfo.carSpace = 0;
-		}
-		var driverId = driverInfo._id;
-		delete driverInfo["_id"];
-		RideInfo.update({_id: driverId}, {$set:driverInfo});
-
-		var request = {
-			senderId: Meteor.userId(),
-			receiverId: rowInfo.uid,
-			message: msg,
-			senderIsRider: senderIsRider,
-			theStatus: "pending",
-			when: new Date()
-		};
-		//Session.set('sessionId', request.sessionId);
-		var reqId = Requests.insert(request);
-		Session.setPersistent("reqId", reqId);
-		 IonPopup.alert({
-	      title: 'Success',
-	      template: 'Request Sent!',
-	      okText: 'Ok'
-	    });
+/*Tracker.autorun(function(){
+	var changer = Session.get("changedObj");
+	var subs = Meteor.subscribe('rideinfo', changer);
+	if (subs.ready()){
+		console.log(RideInfo.find().fetch().length);
 	}
-}
-
-
-//rideinfo.js
-Template.statusinfo.helpers({
-	statuses: function(){return Statuses.find({},{sort:{when:-1}})}
-})
-
-Template.statusrow.events({
-	"click .delstatus": function() {
-		console.dir(this);
-		Statuses.remove(this._id);
-	}
-})
-
-
-Template.requestinfo.helpers({
-	received: function() {return typeof Requests.findOne({receiverId: Meteor.userId()}, {}) != "undefined" || typeof Requests.findOne({senderId: Meteor.userId()}, {}) != "undefined"},
-	//received: function() {return Session.get("confirmed")},
-	receivedContent: function(){
-			var request1 = Requests.find({receiverId: Meteor.userId()}, {sort:{when:-1}});
-			var request2 = Requests.find({senderId: Meteor.userId()}, {sort:{when:-1}});
-			if (request1.count() != 0) {
-				return request1;
-			} else if (request2.count() != 0){
-				return request2;
-			} else {
-				return null;
-			}
-	}
-})
-
-Template.requestrow.helpers({
-	shouldShowComplete: function(){
-		if ((Meteor.userId() == this.receiverId && this.senderIsRider && this.theStatus == "confirmed") || (Meteor.userId() == this.senderId && !this.senderIsRider && this.theStatus == "confirmed")){
-			return true;
-		} else {
-			return false;
-		}
-	}
-})
-
-Template.requestrow.events({
-	"click .delrequest": function(event){
-		console.dir(this);
-		Requests.remove(this._id);
-	},
-	"click .complete": function(event){
-		var sts = Statuses.findOne({requestId: this._id}, {});
-		sts.theStatus = "completed";
-		var statusId = sts._id;
-		delete sts["_id"];
-		Statuses.update({_id: statusId}, {$set:sts});
-
-		if (this.senderIsRider) {
-			var driverInfo = RideInfo.findOne({uid: this.receiverId}, {});
-		} else {
-			var driverInfo = RideInfo.findOne({uid: this.senderId}, {});
-		}
-
-		var driverId = driverInfo._id;
-		delete driverInfo['_id'];
-		driverInfo.carSpace += 1;
-		RideInfo.update({_id:driverId}, {$set:driverInfo});
-
-	}
-
-})
-
-
-Template.rideinfo.helpers({
-	isLeaving:function() {return Session.get("direction")=="from"},
-	isComing: function() {return  Session.get("direction")=="to"},
-	rideto: function(){
-		return RideInfo.find(
-			{direction:"to"},
-			
-			{sort:{destAddress:1,status1:1,when:-1}}
-		)},
-	ridefrom: function(){
-		return RideInfo.find(
-			{direction:"from"},
-			
-			{sort:{destAddress:1,status1:1,when:-1}}
-		)},
-	//receive: function(){ return Meteor.userId() == Session.get('sessionId')[1]}
-})
-
-Template.ridetorow.events({
-	"click .delride": function(event){
-		console.dir(this);
-		RideInfo.remove(this._id);
-	},
-	"click .call": function(event){
-		alert(this.phone);
-	},
-	"click .request": function(event){
-		var msg = "";
-		var senderIsRider = true;
-		if (this.status1 == "driver") {
-			msg = "Can you pick me up?";
-			senderIsRider = true;
-			var driverInfo = RideInfo.findOne({uid: this.uid}, {});
-		} else if (this.status1 == "rider") {
-			msg = "I want to pick you up.";
-			senderIsRider = false;
-			var driverInfo = RideInfo.findOne({uid: Meteor.userId()}, {});
-		}
-		
-		if (driverInfo.carSpace > 0) {
-			driverInfo.carSpace -= 1;
-		} else {
-			driverInfo.carSpace = 0;
-		}
-		var driverId = driverInfo._id;
-		delete driverInfo["_id"];
-		RideInfo.update({_id: driverId}, {$set:driverInfo});
-
-		var request = {
-			senderId: Meteor.userId(),
-			receiverId: this.uid,
-			message: msg,
-			senderIsRider: senderIsRider,
-			theStatus: "pending",
-			when: new Date()
-		};
-		//Session.set('sessionId', request.sessionId);
-		Requests.insert(request);
-		alert("Request sent.");
-	}
-})
-
-
-Template.ridetorow.helpers({
-	delete:function(){ return this.uid==Meteor.userId() },
-	match: function(){ 
-		if (typeof RideInfo.findOne({uid:Meteor.userId()}, {}) != "undefined") {
-			var currentLocation = RideInfo.findOne({uid:Meteor.userId()}, {}).location;
-			return this.location == currentLocation && this.uid != Meteor.userId();
-		}
-		else
-			return false;
-	},
-	shouldShowRequest: function() {
-		if (Session.get("role") == "driver") {
-			var riderId = this.uid;
-			var driverId = Meteor.userId();
-		} else if (Session.get("role") == "rider") {
-			var riderId = Meteor.userId();
-			var driverId = this.uid;
-		}
-		if (Session.get("role") == "driver") {
-			if (this.status1 == "rider") {
-				if (Requests.find({$and: [{senderId: Meteor.userId()}, {receiverId: this.uid}, {theStatus: "pending"}]}, {}).count() != 0 || Statuses.find({$and: [{riderId: this.uid}, {driverId: Meteor.userId()}, {theStatus: "riding"}]}, {}).count() != 0) {
-					return false;
-				} else {
-					return true;
-				}
-			}else {
-				return false
-			}
-		} else if (Session.get("role") == "rider") {
-			if (Requests.find({$and: [{senderId: Meteor.userId()}, {theStatus: "pending"}]}, {}).count() != 0 || Statuses.find({$and: [{riderId: Meteor.userId()}, {theStatus: "riding"}]}, {}).count() != 0){
-				return false;
-			} else {
-				return true;
-			}
-		} else {
-			return false;
-		}
-	},
-	shouldShowPhone: function() {
-		if (Session.get("role") == "driver") {
-			var riderId = this.uid;
-			var driverId = Meteor.userId();
-		} else if (Session.get("role") == "rider") {
-			var riderId = Meteor.userId();
-			var driverId = this.uid;
-		}
-
-		if (Requests.find({$and: [{senderId: Meteor.userId()}, {receiverId: this.uid}, {theStatus: "pending"}]}, {}).count() != 0 || Statuses.find({$and: [{riderId: riderId}, {driverId: driverId}, {theStatus: "riding"}]}, {}).count() != 0){
-			return true;
-		} else {
-			return false;
-		}
-	}
-})
-
-
+	console.log("changedObj rerun");
+});*/
 
 //map.js
 
@@ -505,9 +176,23 @@ Template.map.helpers({
 });
 
 
+Template.map.onRendered(function(){
+	/*
+	this.autorun(function () {
+    if (GoogleMaps.loaded()) {
+      $("#pac-input").geocomplete().bind("geocode:result", function(event, result){
+      	Session.setPersistent('place', result);
+      	Session.setPersistent('place_location', {lat: result.geometry.location.lat(), lng: result.geometry.location.lng()});
+      	console.log(result.geometry);
+	  });
+    }
+  });*/
+
+});
+
 
 Template.map.onCreated(function() { 
-//console.log("created"); 
+//console.log("created");
   var self = this;
 
   GoogleMaps.ready('map', function(map) {
@@ -540,6 +225,8 @@ Template.map.onCreated(function() {
     var circle_menu = self.find("#circle-menu");
     map.instance.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(circle_menu);
 	*/
+
+
     var searchBox = new google.maps.places.SearchBox(input);
     map.instance.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
     setUpSearchBox();
@@ -549,13 +236,6 @@ Template.map.onCreated(function() {
 
    	map.instance.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(buttonGroupDiv);
 
-   	 var locations = [];
-      var info = [];
-      var geolocations = Geolocations.find().fetch();
-      geolocations.forEach(function(location, index){
-	        locations.push(location);
-	        info.push(generateHTML(location.uid));
-      });
 
     if (Session.get("direction") == "from"){
     	dropDestPins();
@@ -563,7 +243,12 @@ Template.map.onCreated(function() {
     //dropLocMarkers();
 
     RideInfo.find().observeChanges({
+    	added: function(id, object) {
+    		console.log("ride added");
+    		Meteor.subscribe('geolocations', id);
+    	},
     	changed: function(id, object) {
+    		//Session.set('changedObj', object);
     		console.log("ridechange");
     		var userId = RideInfo.findOne({_id: id}, {}).uid;
     		if (userId != Meteor.userId()) {
@@ -598,16 +283,21 @@ Template.map.onCreated(function() {
     		}
     	},
 		removed: function(id) {
+			console.log("rideinfo removed");
+			var symbol = id + 'remove';
+			Meteor.subscribe('geolocations', symbol);
+			/*
 			var userId = RideInfo.findOne({_id: id}, {}).uid;
 			var geo = Geolocations.findOne({uid:userId}, {});
 	    	var dest = Destinations.findOne({uid:userId}, {});
-			//console.log("removed rideinfo");
+			console.log("removed rideinfo");
 			if (geo != undefined) {
 			    removeLocMarker(geo._id);
 			}
 			if (dest != undefined) {
 			    removeDestPin(dest._id);
 			}
+			*/
 		}
 	});
 
@@ -615,13 +305,15 @@ Template.map.onCreated(function() {
 	Geolocations.find().observeChanges({
 		added: function(id, location) {
 			console.log("added");
+			console.log(location);
 			dropSingleLocMarker(id, location);
 		},
 		changed: function(id, location) { // update marker position when changed
 			//console.log("changed");
+			
 			for (i = 0; i < locmarkers.length; i++) {
 				if (locmarkers[i]._id == id){
-					locmarkers[i].position = {lat: location.loc.coordinates[0], lng: location.loc.coordinates[1]};
+					locmarkers[i].position = new google.maps.LatLng(location.loc.coordinates[0], location.loc.coordinates[1]);
 					break;
 				}
 			}
@@ -634,7 +326,7 @@ Template.map.onCreated(function() {
 
 	Destinations.find().observeChanges({
 		added: function(id, dest){ /* drop destpins */
-			dropSingleDestPin(id, dest);
+			//dropSingleDestPin(id, dest);
 		},
 		removed: function(id){ /* remove destpin */
 			removeDestPin(id);
@@ -643,10 +335,9 @@ Template.map.onCreated(function() {
 
 
 	function dropSingleDestPin(id, dest){
+		
 		var ride = RideInfo.findOne({uid: dest.uid}, {});
 			console.log(dest.destGeoloc);
-			if (Session.get("direction") == ride.direction) {
-				if (Session.get("role") != ride.status1){
 					var destpin = new google.maps.Marker({
 			                position: {lat: dest.destGeoloc.coordinates[0], lng: dest.destGeoloc.coordinates[1]},
 			                map: map.instance,
@@ -659,8 +350,7 @@ Template.map.onCreated(function() {
 			              });
 					destpins.push(destpin);
 					addEventsForDestpin(destpin);
-				}
-			}
+			
 	}
 
 
@@ -747,90 +437,18 @@ Template.map.onCreated(function() {
         destpins = [];
       }
 
-
-
-      function generateHTML(userId){
-        var rideInfo = RideInfo.findOne({uid: userId}, {});
-        //var content = "My ass";
-        //console.log(userId);
-        var destInfo = Destinations.findOne({uid: userId}, {});
-        if (destInfo == undefined) {
-        	if (Session.get("direction") == "to"){
-        		destInfo = {destAddress: "Brandeis University", when: rideInfo.when};
-        	} else {
-        		destInfo = {destAddress: "N/A", when: "N/A"};
-        	}
-        }
-        if (userId == Meteor.userId()){
-          return {html: '<p>You</p>', role: Session.get("role"), isSelf: true, ride:rideInfo};
-        }
-
-
-        //console.log();
-        var content;
-        var role;
-        var requestButton = '';
-        var phoneButton = '';
-        var shouldShowRequest = new ridetorowHelpers(rideInfo).shouldShowRequest();
-        var shouldShowPhone = new ridetorowHelpers(rideInfo).shouldShowPhone();
-        if(shouldShowPhone){
-        		phoneButton = '<input type="button" name="phone" id="phone" value="Call">'
-        	}
-        if(rideInfo.status1 == "rider"){
-        	if(shouldShowRequest){
-        		requestButton = '<input type="button" name="request" id="request" value="Pick Up">';
-        	}
-          content = '<table class="table table-striped">'+
-                        '<thead>' +
-                        '<tr><th>Name</th><th>Go To</th><th>Time</th></tr>' +
-                      '</thead>' +
-                      '<tbody>' +
-                        '<tr><td>'+rideInfo.who+'</td><td>'+destInfo.destAddress+'</td><td>'+destInfo.when+'</td></tr>' +
-                      '</tbody>' +
-                    '</table>'+ requestButton + phoneButton;
-          role = "rider";
-
-        }else{
-        	if (shouldShowRequest){
-        		requestButton = '<input type="button" name="request" id="request" value="Get A Ride">';
-        	}
-          content = '<table class="table table-striped">'+
-                        '<thead>' +
-                        '<tr><th>Name</th><th>Back To</th><th>Seats Left</th><th>Time</th></tr>' +
-                      '</thead>' +
-                      '<tbody>' +
-                        '<tr><td>'+rideInfo.who+'</td><td>'+destInfo.destAddress+'</td><td>'+rideInfo.carSpace+'</td><td>'+destInfo.when+'</td></tr>' +
-                      '</tbody>' +
-                    '</table>'+requestButton + phoneButton;
-          role = "driver";
-        }
-        
-
-        return {html:content, role:role, isSelf: false, ride:rideInfo};
-      }
-
       function dropSingleLocMarker(id, location) {
-			 var info = generateHTML(location.uid);
-			 if (Session.get("direction") == info.ride.direction) {
-				 if ((Session.get("role") != info.role) || info.isSelf){
-				 	//console.log(info.role);
-				 	//console.log(" one time "+ info.role + info.isSelf);
-					 var locmarker = new google.maps.Marker({
-			                position: {lat: location.loc.coordinates[0], lng: location.loc.coordinates[1]},
-			                animation: google.maps.Animation.DROP,
-			                map: map.instance,
-			                role: info.role,
-			                isSelf: info.isSelf,
-			                _id: location._id,
-			                label: ""+info.ride.who,
-			                ride: info.ride,
-			                //html: '<div id="infowindow'+labelindex+'>'+info[labelindex-1]+'</div>'
-			                html: info.html
-			              });
-					 locmarkers.push(locmarker);
-					 addEventsForLocMarker(locmarker);
-				}
-			}
+			var ride = RideInfo.findOne({uid: location.uid}, {});
+			var locmarker = new google.maps.Marker({
+				                position: new google.maps.LatLng(location.loc.coordinates[0], location.loc.coordinates[1]),
+				                animation: google.maps.Animation.DROP,
+				                map: map.instance,
+				                uid:location.uid,
+				                label:ride.who,
+				                _id: id
+				              });
+			locmarkers.push(locmarker);
+			addEventsForLocMarker(locmarker);
 		}
 
 
@@ -892,21 +510,10 @@ Template.map.onCreated(function() {
 
       function addEventsForLocMarker(marker){
       	google.maps.event.addListener(marker, 'click', function(){
-              infowindow.setContent(marker.html);
-              infowindow.open(map.instance, marker);
-              //if(this.role == "rider"){
-              	var selfMarker = marker;
-              	if (self.find("#request")) {
-	                self.find("#request").addEventListener('click', function(){
-	                  var events = new ridetorowEvents(selfMarker.ride);
-	                  console.log("request");
-	                  events.clickRequest();
-	                  var callButtonDiv = document.createElement('button');
-	      			  var callButton = new CallButton(callButtonDiv, map.instance, selfMarker.ride);
-	      			  map.instance.controls[google.maps.ControlPosition.TOP_LEFT].push(callButtonDiv);
-	                });
-	            }
-              //}
+      		var destInfo;
+      		var rideInfo = RideInfo.findOne({uid: marker.uid}, {});
+      		var destInfo = Destinations.findOne({uid: marker.uid}, {});
+			IonModal.open('infomodal', [rideInfo, destInfo]);
             });
       }
 
@@ -947,11 +554,13 @@ Template.map.onCreated(function() {
 	      });
 
 	      var destmarkers = [];
-	      console.log("setup");
+
+	        console.log("setup");
 	      
 	      //google.maps.event.addListener(searchBox, 'places_changed', function() {
 	      searchBox.addListener('places_changed', function(){
 	      	console.log("places_changed");
+
 	        var places = searchBox.getPlaces();
 
 	        if (places.length == 0) {
@@ -1002,14 +611,11 @@ Template.map.onCreated(function() {
 	            		destAddress: destmarker.title,
 	            		when: new Date()
 	            	}
-	            	if (typeof Destinations.findOne({uid: Meteor.userId()}, {}) != "undefined" ) { 
-	            		var dest = Destinations.findOne({uid: Meteor.userId()}, {});
-	            		console.log(dest);
-	          			Destinations.update({_id: dest._id}, {$set: destination});
-	            	} else {
-	            		var destId = Destinations.insert(destination);
-	            	}
-	            	Session.setPersistent('destInfoId', destId);
+	            	Meteor.apply('updateDest', [destination], [], function(err, result){
+	            		if (!err){
+	            			Session.setPersistent('destInfoId', result);
+	            		}
+	            	});
 			      },
 			      onCancel: function() {
 			        // do nothing
@@ -1033,6 +639,7 @@ Template.map.onCreated(function() {
      function ButtonGroup(controlDiv, map) {
 
         controlDiv.className = 'button-bar';
+        controlDiv.id = 'mapControlBar'
 
         var refreshbutton = document.createElement('a');
         refreshbutton.className = 'button button-balanced';
@@ -1064,7 +671,7 @@ Template.map.onCreated(function() {
 	        finalizebutton.className = 'button button-assertive';
 	        var finalizeIcon = document.createElement('span');
 	        finalizeIcon.className = "ion-model-s";
-	        finalizeIcon.innerHTML = "&nbsp;Finalize";
+	        finalizeIcon.innerHTML = "&nbsp;I'm Leaving";
 	        finalizebutton.appendChild(finalizeIcon);
 
 	        controlDiv.appendChild(finalizebutton);
@@ -1072,26 +679,61 @@ Template.map.onCreated(function() {
 	        finalizebutton.addEventListener('click', function() {   
 	          var sts = Statuses.findOne({driverId:Meteor.userId()}, {});
 	          if (sts) {
-	          	if (Session.get("reqId") !== null || Session.get("reqId") != undefined){
-						Requests.remove(Session.get("reqId"));
-						Session.set("reqId", null);
-					}
-	          }
+	          		var reqs = Requests.find();
+	          		reqs.forEach(function(req, index){
+	          			Meteor.apply('removeRequest', [req._id], [], function(err, result){
+							if (!err) {
+								Session.set("reqId", null);
+							}
+						});
+	          		});
 	          var trip1 = Trips.find({uid: Meteor.userId()}, {});
+	          var addSpace = 0;
 	          trip1.forEach(function(thetrip, index){
 	          	if (Session.get("destInfoId")){
-	          		Destinations.remove(Session.get("destInfoId"));
+	          		Meteor.apply('removeDest', [Session.get("destInfoId")], [], function(err, result){
+							if (!err) {
+								// do some
+							}
+						});
 	          	}
 	          	if (Destinations.findOne({uid: thetrip.partnerId}, {}) != undefined){
-	          		Destinations.remove(Destinations.findOne({uid: thetrip.partnerId}, {})._id);
+	          		Meteor.apply('removeDest', [Destinations.findOne({uid: thetrip.partnerId}, {})._id], [], function(err, result){
+							if (!err) {
+								// do some
+							}
+						});
+
 	          	}
-	          	Statuses.remove(Session.get("statusInfoId"));
+	          	Meteor.apply('removeStatus', [sts._id], [], function(err, result){
+							if (!err) {
+								// do some
+							}
+						});
 	          	 var trip2 = Trips.find({$and: [{uid: thetrip.partnerId}, {partnerId: thetrip.uid}]}, {});
 	          	 trip2.forEach(function(thetrip2, idx){
-	          	 	Trips.remove(thetrip2._id);
+	          	 	Meteor.apply('removeTrip', [thetrip2._id], [], function(err, result){
+							if (!err) {
+								// do some
+							}
+						});
 	          	 });
-	          	Trips.remove(thetrip._id);
+	          	Meteor.apply('removeTrip', [thetrip._id], [], function(err, result){
+							if (!err) {
+								// do some
+							}
+						});
+	          	addSpace += 1;
 	          });
+
+				var driverInfo = RideInfo.findOne({uid: Meteor.userId()},{});
+
+				Meteor.apply('updateRideInfo', [driverInfo._id, {carSpace: driverInfo.carSpace + addSpace}], [], function(err, result){
+					if (!err) {
+						// do something
+					}
+				});
+			}
 	          Router.go("welcome");
 	          Session.setPersistent("submitted", false);
 	        });
@@ -1144,39 +786,132 @@ Template.map.onCreated(function() {
         });
     }
 
+    /*
+    Meteor.subscribe("rideinfo", Session.get("follow"), function(){
+      	console.log(RideInfo.find().fetch().length);
+      });
+      Meteor.subscribe("requests");
+      Meteor.subscribe("statuses");
+      Meteor.subscribe("trips");
+      Meteor.subscribe("geolocations", Session.get("follow"));
+      Meteor.subscribe("destinations");
+      */
 
       // Create call button
        //setUpSearchBox();
     // Create and move the marker when latLng changes.
     self.autorun(function() {
-    	console.log("autorun");
       var latLng = Geolocation.latLng();
       var currentPosition = new google.maps.LatLng(latLng.lat, latLng.lng);
-     // if (! latLng)
-       // return;
-      //console.log(info);
-      updateLocation();
+      updateLocation(latLng);
 
-     function updateLocation(){
-	      var geoloc = {
-	        uid: Meteor.userId(),
-	        loc: {type: "Point", coordinates: [latLng.lat, latLng.lng]}
-	      };
-	      if (typeof Geolocations.findOne({uid: Meteor.userId()}, {}) != "undefined" ) {
-	          var geolocation = Geolocations.findOne({uid: Meteor.userId()}, {});
-	          Geolocations.update({_id: geolocation._id}, {$set: geoloc});
-	          //Geolocations.update({_id: "h7jbTPQebyweWZQq3"}, {$set: {uid: "o7SXY5X5qKxx5YE7K", loc:{type: "Point", coordinates:[42.3, -71.1]}}});
-	      } else {
-	          Geolocations.insert(geoloc);
-	      }
+      /*
+      $("#pac-input").geocomplete().bind("geocode:result", function(event, result){
+	      // Bias the SearchBox results towards current map's viewport.
+	      google.maps.event.addListener(map, 'bounds_changed', function(){
+	        searchBox.setBounds(map.getBounds());
+	      });
 
-	      Session.setPersistent("geolocInfoId", Geolocations.findOne({uid: Meteor.userId()}, {})._id);
-      }
+	      var destmarkers = [];
+
+	        //var place_location = Session.get('place_location');
+	        //var place = Session.get('place');
+	        var place = result
+
+	      	if (place) {
+	        console.log("places_changed");
+	        console.log(place);
+
+	        // Clear out the old markers.
+	        destmarkers.forEach(function(marker) {
+	          marker.setMap(null);
+	        });
+
+	        destmarkers = [];
+
+	        // For each place, get the icon, name and location.
+	        var bounds = new google.maps.LatLngBounds();
+	          var icon = {
+	            url: place.icon,
+	            size: new google.maps.Size(71, 71),
+	            origin: new google.maps.Point(0, 0),
+	            anchor: new google.maps.Point(17, 34),
+	            scaledSize: new google.maps.Size(25, 25)
+	          };
+
+	          // Create a marker for each place.
+	          destmarkers.push(new google.maps.Marker({
+	            map: map.instance,
+	            icon: icon,
+	            title: place.formatted_address,
+	            position: place.geometry.location
+	          }));
+
+	          var destmarker = destmarkers[0];
+	          console.log(destmarker.title);
+
+	          google.maps.event.addListener(destmarker, 'click', function(){
+	          	//console.log(destmarker.position.lat());
+	          	//var confirmed = confirm(destmarker.title + " as location?");
+	          	IonPopup.confirm({
+			      title: 'Are you sure?',
+			      template: "<strong>" + destmarker.title + "</strong>" + " as location?",
+			      onOk: function() {
+			        var destination = {
+	            		uid: Meteor.userId(),
+	            		destGeoloc: {type: "Point", coordinates: [destmarker.position.lat(), destmarker.position.lng()]},
+	            		destAddress: destmarker.title,
+	            		when: new Date()
+	            	}
+	            	Meteor.apply('updateDest', [destination], [], function(err, result){
+	            		if (!err){
+	            			Session.setPersistent('destInfoId', result);
+	            		}
+	            	});
+			      },
+			      onCancel: function() {
+			        // do nothing
+			      }
+			    });
+	          });
+
+	          //console.log(destmarker.position.lat);
+	          console.log(place.geometry.viewport);
+	          if (place.geometry.viewport) {
+	            // Only geocodes have viewport.
+	            bounds.union(place.geometry.viewport);
+	          } else {
+	            bounds.extend(place.geometry.location);
+	          }
+	        map.instance.fitBounds(bounds);
+	        Session.set('place', null);
+	        Session.set('place_location', null);
+	    }
+
+	    });*/
       // Center and zoom the map view onto the current position.
       if (Session.get("follow")){
 	      map.instance.setCenter(currentPosition);
 	      map.instance.setZoom(MAP_ZOOM);
   		}
+
+
+
+  	function updateLocation(latLng){
+	      var geoloc = {
+	        uid: Meteor.userId(),
+	        loc: {type: "Point", coordinates: [latLng.lat, latLng.lng]}
+	      };
+
+	      Meteor.apply("updateGeoloc", [geoloc], [], function(err, result){
+	      	console.log(result);
+	      	Session.setPersistent("geolocInfoId", result);
+	      });
+      }
+    
+
     });
   });
 });
+
+

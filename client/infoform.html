@@ -2,112 +2,6 @@
 
   {{#ionView}}
     {{#ionContent}}
- <!-- 
-	<section style="background:#efefe9;">
-        <div class="container">
-            <div class="row">
-                <div class="board">
-                    <div class="board-inner">
-                    <ul class="nav nav-tabs" id="myTab">
-                    <div class="liner"></div>
-                     <li class="active">
-                     <a href="#role" data-toggle="tab" title="role">
-                      <span class="round-tabs one">
-                              <i class="glyphicon glyphicon-user"></i>
-                      </span> 
-                  </a></li>
-
-                  <li class="disabled"><a href="#direction" data-toggle="tab" title="direction">
-                     <span class="round-tabs two">
-                         <i class="glyphicon glyphicon-map-marker"></i>
-                     </span> 
-                    </a>
-                 </li>
-
-                     <li class="disabled"><a href="#doner" data-toggle="tab" title="completed">
-                         <span class="round-tabs five">
-                              <i class="glyphicon glyphicon-ok"></i>
-                         </span> </a>
-                     </li>
-                     
-                     </ul></div>
-
-                     <div class="tab-content">
-                      <div class="tab-pane fade in active" id="role">
-
-                          <h3 class="head text-center">Welcome to BCarpool<sup>™</sup> <span style="color:#f48260;">♥</span></h3>
-              
-                        <form class="form-horizontal col-sm-offset-5" id="role_form" name="role_form" role="form">
-                        	<div class="form-group">
-                        		<div class="radio radio-primary">
-	                            	<input type="radio" id="driver" name="driver">
-	                            	<label for="driver">I can offer a ride</label>
-                            	</div>
-                            	<div class="radio radio-primary">
-									<input type="radio" id="rider" name="driver">
-									<label for="rider">I need a ride</label>
-								</div>
-								{{#if isDriver}}
-								 <input type="number" id="numSeats" name="numSeats" placeholder="Seats Available" required>
-								{{/if}}
-							</div>
-							<fieldset>
-                                    <button type="submit" href="#direction" id="role_submit" name="role_form" class="btn-submit btn btn-success btn-outline-rounded green"> Next <span style="margin-left:10px;" class="glyphicon glyphicon-send"></span></button>
-                            </fieldset>
-                        </form>  
-
-                      </div>
-                      <div class="tab-pane fade" id="direction">
-                          <h3 class="head text-center">Where you going?<sup>™</sup> Direction</h3>
-                          
-                        <form class="form-horizontal col-sm-offset-5" id="direction_form" name="direction_form" role="form">
-                        	<div class="form-group">
-                        		<div class="radio radio-primary">
-		                        	<input type="radio" id="coming" name="direction">
-		                        	<label for="coming">I am going to Brandeis <span style="margin-left:10px;" class="glyphicon glyphicon-education"></span></label>
-	                        	</div>
-	                        	<div class="radio radio-primary">
-									<input type="radio" id="leaving" name="direction">
-									<label for="leaving">I am leaving Brandeis <span style="margin-left:10px;" class="glyphicon glyphicon-home"></span></label> 
-								</div>
-							</div>
-                            <fieldset>
-                                    <button type="submit" href="#doner" id="direction_submit" name="direction_form" class="btn-submit btn btn-success btn-outline-rounded green"> Next <span style="margin-left:10px;" class="glyphicon glyphicon-send"></span></button>
-                            </fieldset>
-                        </form>  
-                          
-                      </div>
-                      <div class="tab-pane fade" id="doner">
-                          <div class="text-center">
-                            <i class="img-intro icon-checkmark-circle"></i>
-                        </div>
-                        <h3 class="head text-center">thanks for staying tuned! <span style="color:#f48260;">♥</span> Bootstrap</h3>
-                        <form class="form-horizontal col-sm-offset-5" id="complete_form" name="complete_form" role="form">
-                        	<fieldset>
-                                    <button type="submit" id="complete_submit" name="complete_form" class="btn-submit btn btn-success btn-outline-rounded green"> Go To Map </button>
-                            </fieldset>
-                        </form>
-                        </div>
-                        <div class="clearfix"></div>
-                        </div>
-
-		</div>
-		</div>
-		</div>
-</section>
--->
-<!--
-<div class="list">
-  {{#ionRadio name="role" id="driver"}}
-  I can offer a ride
-  {{/ionRadio}}
-  {{#ionRadio name="role" id="rider"}}
-  I need a ride
-  {{/ionRadio}}
-</div>
--->
-
-
     <div class="list">
       <label class="item item-radio">
       <input type="radio" name="role" id="driver">
@@ -134,7 +28,6 @@
   <a class="button button-large button-positive button-block" id="role-next" href="{{pathFor 'where'}}">Confirm & Next</a>
   {{/ionContent}}
   {{/ionView}}
-
 </template>
 
 
@@ -166,6 +59,39 @@
         <i class="radio-icon ion-checkmark"></i>
       </label>
 
+    </div>
+    <a class="button button-medium button-positive button-block" id="where-next" href="{{pathFor 'when'}}">Confirm & Next</a>
+    {{/ionContent}}
+  {{/ionView}}
+</template>
+
+<template name="when">
+  {{#contentFor "headerButtonLeft"}}
+    {{>ionNavBackButton path="where"}}
+  {{/contentFor}}
+
+  {{#contentFor "headerTitle"}}
+    <h1 class="title ion-clock">&nbsp;When To Go?</h1>
+  {{/contentFor}}
+
+  {{#ionView}}
+    {{#ionContent}}
+      <div class="list">
+
+      <label class="item item-radio">
+        <input type="radio" name="time" id="now">
+        <div class="item-content ion-flame">
+          &nbsp;I am going NOW
+        </div>
+        <i class="radio-icon ion-checkmark"></i>
+      </label>
+      <label class="item item-radio">
+        <input type="radio" name="time" id="later">
+        <div class="item-content ion-ios-clock">
+          I will go Later
+        </div>
+        <i class="radio-icon ion-checkmark"></i>
+      </label>
     </div>
     <a class="button button-medium button-positive button-block" id="complete-info" href="{{pathFor 'done'}}">Complete</a>
     {{/ionContent}}

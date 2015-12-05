@@ -1,6 +1,12 @@
 Template.tripinfo.helpers({
 	trips: function(){
-		return Trips.find({uid: Meteor.userId()},{sort:{when:-1}});
+		var trips = Trips.find({uid: Meteor.userId()},{sort:{when:-1}});
+		var res = [];
+		trips.forEach(function(trip, index){
+			trip.when = moment(trip.when).format('llll');
+			res.push(trip);
+		});
+		return res;
 	}
 })
 

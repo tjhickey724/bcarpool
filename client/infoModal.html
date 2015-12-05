@@ -1,0 +1,43 @@
+<template name="infomodal">
+  {{#ionModal title="Person Info"}}
+    <!--{{> statusinfo}}
+	{{> requestinfo}}
+	{{> rideinfo}}
+	-->
+	{{#if isSelf}}
+	This is your self.
+	{{else}}
+	<table class="table table-striped">
+       <thead>
+       <tr>
+       	<th>Name</th>
+       	<th>Go To</th>
+       	{{#if isDriver}}
+       	<th>Seats Left</th>
+       	{{/if}}
+       	<th>Desired Departure Time</th>
+       </tr>
+       </thead>
+       <tbody>
+       <tr>
+       	<td>{{personInfo.name}}</td>
+       	<td>{{personInfo.go}}</td>
+       	{{#if isDriver}}
+       	<td>{{personInfo.carSpace}}</td>
+       	{{/if}}
+       	<td>{{personInfo.time}}</td>
+       </tr>
+       </tbody>
+    </table>
+    <div class="button-bar">
+	  {{#if shouldShowPhone}}
+	  <a href="tel: {{personInfo.phone}}" class="button button-balanced" name="phone" id="phone"><span class="ion-ios-telephone">&nbsp;Call</span></a>
+	  {{/if}}
+    {{#if shouldShowRequest}}
+	  <a class="button button-positive" name="request" id="request"><span class="ion-ios-personadd">&nbsp;{{requestButtonValue}}</span></a>
+	  {{/if}}
+    <a class="button button-stable" name="dest" id="dest"><span class="ion-ios-marker">&nbsp;See Destination</span></a>
+	</div>
+	{{/if}}
+  {{/ionModal}}
+</template>

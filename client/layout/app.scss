@@ -60,3 +60,7 @@ $loading-font-size: 22px;
 .positive, a.positive {
   color: #0070FE;
 }
+
+.content.overflow-scroll.has-header {
+    bottom: 0px !important;
+}
