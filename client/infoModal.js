@@ -31,6 +31,9 @@ Template.infomodal.helpers({
     isSelf: function(){
     	return Meteor.userId() == rideInfo.uid;
     },
+    toBrandeis: function(){
+    	return Session.get("direction") == "to";
+    },
 	requestButtonValue: function(){
 		if(rideInfo.status1 == "rider"){
 			return "Pick Up";

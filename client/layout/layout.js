@@ -2,7 +2,7 @@ Template.layout.helpers({
 	userName: function(){
 		var name;
 		if(Meteor.user()){
-			name = Meteor.user().profile['firstName'] + Meteor.user().profile['lastName'];
+			name = Meteor.user().profile['firstName'] + ' '+ Meteor.user().profile['lastName'];
 		} else {
 			name = "Loading...";
 		}

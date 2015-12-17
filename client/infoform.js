@@ -167,4 +167,7 @@ Template.when.events({
 	}
 });
 
+Template.done.helpers({
+	isDriver:function() {return Session.get("role")=="driver"}
+});
 

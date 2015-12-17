@@ -30,6 +30,21 @@ AccountsTemplates.configure({
   homeRoutePath: '/welcome',
 });
 
+var pwd = AccountsTemplates.removeField('password');
+AccountsTemplates.removeField('email');
+AccountsTemplates.addFields([
+  {
+      _id: 'email',
+      type: 'email',
+      required: true,
+      displayName: "Brandeis Email",
+      //re: /.+@(.+){2,}\.(.+){2,}/,
+      re: /.+@brandeis\.edu/,
+      errStr: 'Invalid email',
+  },
+  pwd
+]);
+
 AccountsTemplates.addField({
     _id: "firstName",
     type: "text",

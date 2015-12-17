@@ -1,32 +1,51 @@
 <template name="tripinfo">
-  {{#ionModal title="Passenger Info"}}
-    <div class="padding">
-      
-    	<h1>Passenger Info</h1>
-		<table class="table table-striped">
-		<thead>
-			<tr><th>Passenger Name</th><th>Phone</th><th>Address</th><th>When</th><th>Delete</th></tr>
-		</thead>
-		<tbody>
+  {{#ionModal title="Riders"}}
+  			{{#if trips}}
+			<ul class="list">
 			{{#each trips}}
-			{{> triprow}}
+			<div class="item item-divider">
+			</div>
+			{{> tripcell}}
 			{{/each}}
-		</tbody>
-	</table>
-
-    </div>
+			</ul>
+			{{else}}
+			  <div class="jumbotron vertical-center">
+			  <div class="text-center">
+			  <h3 class="ion-sad-outline">&nbsp;No Riders To Display</h3>
+			  </div>
+			  </div>
+			{{/if}}
   {{/ionModal}}
 </template>
 
 
-<template name="triprow">
-			<tr>
-				<td>{{name}}</td>
-				<td>{{phone}}</td>
-				<td>{{dest}}</td>
-				<td>{{when}}</td>
-				<td>
-					<span class="glyphicon glyphicon-remove deltrip" aria-hidden="true"></span> 
-				</td>
-			</tr>
+<template name="tripcell">
+		<li class="item">
+			<ul class="list">
+				<li class="item">
+					<span class="ion-person">&nbsp;Passenger Name:</span>
+					<div class="pull right">
+					{{name}}
+					</div>
+				</li>
+				<li class="item item-button-right">
+					<span class="ion-ios-telephone">&nbsp;Phone:&nbsp;{{phone}}</span>
+					<a role="button" class="button button-positive" href="tel: {{phone}}">
+				      <i class="icon ion-ios-telephone"></i>
+				    </a>
+				</li>
+				<li class="item">
+					<span class="ion-ios-location">&nbsp;Address:</span>
+					<div class="pull right">
+					{{dest}}
+					</div>
+				</li>
+				<li class="item">
+					<span class="ion-ios-clock">&nbsp;When:</span>
+					<div class="pull right">
+					{{when}}
+					</div>
+				</li>
+			</ul>
+		</li>
 </template>

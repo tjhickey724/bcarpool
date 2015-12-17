@@ -5,30 +5,36 @@
 	{{> rideinfo}}
 	-->
 	{{#if isSelf}}
-	This is your self.
+	{{> self}}
 	{{else}}
-	<table class="table table-striped">
-       <thead>
-       <tr>
-       	<th>Name</th>
-       	<th>Go To</th>
-       	{{#if isDriver}}
-       	<th>Seats Left</th>
-       	{{/if}}
-       	<th>Desired Departure Time</th>
-       </tr>
-       </thead>
-       <tbody>
-       <tr>
-       	<td>{{personInfo.name}}</td>
-       	<td>{{personInfo.go}}</td>
-       	{{#if isDriver}}
-       	<td>{{personInfo.carSpace}}</td>
-       	{{/if}}
-       	<td>{{personInfo.time}}</td>
-       </tr>
-       </tbody>
-    </table>
+    <ul class="list">
+    <li class="item">
+      <span class="ion-person">&nbsp;Name:</span>
+      <div class="pull-right"> 
+      {{personInfo.name}}
+      </div>
+    </li>
+    <li class="item">
+      <span class="ion-location">&nbsp;Go To:</span> 
+      <div class="pull-right"> 
+      {{personInfo.go}}
+      </div>
+    </li>
+    {{#if isDriver}}
+    <li class="item">
+      <span class="ion-ios-pie">&nbsp;Seats Left:</span>
+      <div class="pull-right">
+      {{personInfo.carSpace}}
+      </div>
+    </li>
+    {{/if}}
+    <li class="item">
+      <span class="ion-ios-timer">&nbsp;Desired Departure Time:</span>
+      <div class="pull-right">
+        {{personInfo.time}}
+      </div>
+    </li>
+    </ul>
     <div class="button-bar">
 	  {{#if shouldShowPhone}}
 	  <a href="tel: {{personInfo.phone}}" class="button button-balanced" name="phone" id="phone"><span class="ion-ios-telephone">&nbsp;Call</span></a>
@@ -36,8 +42,19 @@
     {{#if shouldShowRequest}}
 	  <a class="button button-positive" name="request" id="request"><span class="ion-ios-personadd">&nbsp;{{requestButtonValue}}</span></a>
 	  {{/if}}
+    {{#if toBrandeis}}
+    {{else}}
     <a class="button button-stable" name="dest" id="dest"><span class="ion-ios-marker">&nbsp;See Destination</span></a>
+    {{/if}}
 	</div>
 	{{/if}}
   {{/ionModal}}
+</template>
+
+<template name="self">
+  <div class="jumbotron vertical-center">
+  <div class="text-center">
+  <h3 class="ion-happy-outline">&nbsp;This is yourself</h3>
+  </div>
+  </div>
 </template>

@@ -9,10 +9,11 @@ Template.tripinfo.helpers({
 		return res;
 	}
 })
-
-Template.triprow.events({
+/*
+Template.tripcell.events({
 	"click .deltrip": function(){
 		console.dir(this);
 		Trips.remove(this._id);
 	}
 })
+*/

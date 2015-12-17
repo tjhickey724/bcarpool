@@ -221,5 +221,12 @@ Meteor.methods({
 	      }
 	    Trips.remove(id);
 	    return "success";
+	 },
+	 removeHistory: function (id) {
+	 	if (! Meteor.userId()) {
+	        throw new Meteor.Error("not-authorized");
+	      }
+	    Historys.remove(id);
+	    return "success";
 	 }
 });

@@ -176,21 +176,6 @@ Template.map.helpers({
 });
 
 
-Template.map.onRendered(function(){
-	/*
-	this.autorun(function () {
-    if (GoogleMaps.loaded()) {
-      $("#pac-input").geocomplete().bind("geocode:result", function(event, result){
-      	Session.setPersistent('place', result);
-      	Session.setPersistent('place_location', {lat: result.geometry.location.lat(), lng: result.geometry.location.lng()});
-      	console.log(result.geometry);
-	  });
-    }
-  });*/
-
-});
-
-
 Template.map.onCreated(function() { 
 //console.log("created");
   var self = this;
@@ -231,10 +216,13 @@ Template.map.onCreated(function() {
     map.instance.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
     setUpSearchBox();
 
-    var buttonGroupDiv = document.createElement('div');
-    var buttonGroup = new ButtonGroup(buttonGroupDiv, map.instance);
+    var listButtonGroupDiv = document.createElement('ul');
+    var listButtonGroup = new ListButtonGroup(listButtonGroupDiv, map.instance);
 
-   	map.instance.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(buttonGroupDiv);
+    //var buttonGroupDiv = document.createElement('div');
+    //var buttonGroup = new ButtonGroup(buttonGroupDiv, map.instance);
+
+   	map.instance.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(listButtonGroupDiv);
 
 
     if (Session.get("direction") == "from"){
@@ -636,13 +624,16 @@ Template.map.onCreated(function() {
 	    }
 
 
-     function ButtonGroup(controlDiv, map) {
+     function ListButtonGroup(controlDiv, map) {
+     	controlDiv.className = 'list';
+     	controlDiv.id = 'mapControlBar';
 
-        controlDiv.className = 'button-bar';
-        controlDiv.id = 'mapControlBar'
+     	var buttonGroup2 = document.createElement('div');
+        buttonGroup2.className = 'button-bar';
+        //buttonGroup2.id = 'mapControlBar';
 
         var refreshbutton = document.createElement('a');
-        refreshbutton.className = 'button button-balanced';
+        refreshbutton.className = 'button button-balanced button-block item';
         var refreshIcon = document.createElement('span');
         refreshIcon.className = "ion-refresh";
         refreshIcon.innerHTML = "&nbsp;Refresh";
@@ -653,7 +644,7 @@ Template.map.onCreated(function() {
         followbutton.className = 'button button-positive';
         var followIcon = document.createElement('span');
         followIcon.className = "ion-navigate";
-        followIcon.innerHTML = "&nbsp;Following";
+        followIcon.innerHTML = "&nbsp;Tracking";
         followbutton.appendChild(followIcon);
         /*
         var selectbutton = document.createElement('a');
@@ -664,6 +655,7 @@ Template.map.onCreated(function() {
         	google.maps.event.trigger(searchBox, 'places_changed', {});
         });
 		*/
+		controlDiv.appendChild(refreshbutton);
 
 
         if (Session.get("role") == "driver") {
@@ -674,7 +666,7 @@ Template.map.onCreated(function() {
 	        finalizeIcon.innerHTML = "&nbsp;I'm Leaving";
 	        finalizebutton.appendChild(finalizeIcon);
 
-	        controlDiv.appendChild(finalizebutton);
+	        buttonGroup2.appendChild(finalizebutton);
 
 	        finalizebutton.addEventListener('click', function() {   
 	          var sts = Statuses.findOne({driverId:Meteor.userId()}, {});
@@ -755,14 +747,15 @@ Template.map.onCreated(function() {
         		Session.setPersistent("follow", true);
         		$(this).removeClass("button-energized");
         		$(this).addClass("button-positive");
-        		$(this).find('span').html("&nbsp;Following");
+        		$(this).find('span').html("&nbsp;Tracking");
         		$(this).find('span').removeClass('ion-earth');
         		$(this).find('span').addClass('ion-navigate');
         	}
         });
 
-        controlDiv.appendChild(refreshbutton);
-        controlDiv.appendChild(followbutton);
+        buttonGroup2.appendChild(followbutton);
+
+        controlDiv.appendChild(buttonGroup2);
         //controlDiv.appendChild(selectbutton);
       }
 
@@ -786,17 +779,6 @@ Template.map.onCreated(function() {
         });
     }
 
-    /*
-    Meteor.subscribe("rideinfo", Session.get("follow"), function(){
-      	console.log(RideInfo.find().fetch().length);
-      });
-      Meteor.subscribe("requests");
-      Meteor.subscribe("statuses");
-      Meteor.subscribe("trips");
-      Meteor.subscribe("geolocations", Session.get("follow"));
-      Meteor.subscribe("destinations");
-      */
-
       // Create call button
        //setUpSearchBox();
     // Create and move the marker when latLng changes.
@@ -805,90 +787,6 @@ Template.map.onCreated(function() {
       var currentPosition = new google.maps.LatLng(latLng.lat, latLng.lng);
       updateLocation(latLng);
 
-      /*
-      $("#pac-input").geocomplete().bind("geocode:result", function(event, result){
-	      // Bias the SearchBox results towards current map's viewport.
-	      google.maps.event.addListener(map, 'bounds_changed', function(){
-	        searchBox.setBounds(map.getBounds());
-	      });
-
-	      var destmarkers = [];
-
-	        //var place_location = Session.get('place_location');
-	        //var place = Session.get('place');
-	        var place = result
-
-	      	if (place) {
-	        console.log("places_changed");
-	        console.log(place);
-
-	        // Clear out the old markers.
-	        destmarkers.forEach(function(marker) {
-	          marker.setMap(null);
-	        });
-
-	        destmarkers = [];
-
-	        // For each place, get the icon, name and location.
-	        var bounds = new google.maps.LatLngBounds();
-	          var icon = {
-	            url: place.icon,
-	            size: new google.maps.Size(71, 71),
-	            origin: new google.maps.Point(0, 0),
-	            anchor: new google.maps.Point(17, 34),
-	            scaledSize: new google.maps.Size(25, 25)
-	          };
-
-	          // Create a marker for each place.
-	          destmarkers.push(new google.maps.Marker({
-	            map: map.instance,
-	            icon: icon,
-	            title: place.formatted_address,
-	            position: place.geometry.location
-	          }));
-
-	          var destmarker = destmarkers[0];
-	          console.log(destmarker.title);
-
-	          google.maps.event.addListener(destmarker, 'click', function(){
-	          	//console.log(destmarker.position.lat());
-	          	//var confirmed = confirm(destmarker.title + " as location?");
-	          	IonPopup.confirm({
-			      title: 'Are you sure?',
-			      template: "<strong>" + destmarker.title + "</strong>" + " as location?",
-			      onOk: function() {
-			        var destination = {
-	            		uid: Meteor.userId(),
-	            		destGeoloc: {type: "Point", coordinates: [destmarker.position.lat(), destmarker.position.lng()]},
-	            		destAddress: destmarker.title,
-	            		when: new Date()
-	            	}
-	            	Meteor.apply('updateDest', [destination], [], function(err, result){
-	            		if (!err){
-	            			Session.setPersistent('destInfoId', result);
-	            		}
-	            	});
-			      },
-			      onCancel: function() {
-			        // do nothing
-			      }
-			    });
-	          });
-
-	          //console.log(destmarker.position.lat);
-	          console.log(place.geometry.viewport);
-	          if (place.geometry.viewport) {
-	            // Only geocodes have viewport.
-	            bounds.union(place.geometry.viewport);
-	          } else {
-	            bounds.extend(place.geometry.location);
-	          }
-	        map.instance.fitBounds(bounds);
-	        Session.set('place', null);
-	        Session.set('place_location', null);
-	    }
-
-	    });*/
       // Center and zoom the map view onto the current position.
       if (Session.get("follow")){
 	      map.instance.setCenter(currentPosition);
