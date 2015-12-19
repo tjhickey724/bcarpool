@@ -110,7 +110,6 @@
   {{#ionView}}
     {{#ionContent}}
     <div class="card">
-    <div class="jumbotron vertical-center">
     <div class="item item-text-wrap text-center">
     <h1 class="ion-happy-outline">&nbsp;Thank you for completing the information!</h1>
     {{#if isDriver}}
@@ -118,7 +117,6 @@
     {{else}}
     <h3>Now you can find some drivers to pick you up!</h3>
     {{/if}}
-    </div>
     </div>
     </div>
       <a class="button button-medium button-positive button-block" href="{{pathFor 'map'}}"><span class="ion-ios-paperplane"></span>&nbsp;{{#if isDriver}}Find Riders{{else}}Find Drivers{{/if}}</a>

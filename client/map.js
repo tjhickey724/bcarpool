@@ -203,18 +203,13 @@ Template.map.onCreated(function() {
     map.instance.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(circle_menu);
 	*/
 
-
-    var searchBox = new google.maps.places.SearchBox(input);
-    map.instance.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
-    setUpSearchBox();
-
     var listButtonGroupDiv = document.createElement('ul');
     var listButtonGroup = new ListButtonGroup(listButtonGroupDiv, map.instance);
-
-    //var buttonGroupDiv = document.createElement('div');
-    //var buttonGroup = new ButtonGroup(buttonGroupDiv, map.instance);
-
    	map.instance.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(listButtonGroupDiv);
+
+		var searchBox = new google.maps.places.SearchBox(input);
+    map.instance.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+    setUpSearchBox();
 
 
     RideInfo.find().observeChanges({
@@ -342,6 +337,14 @@ Template.map.onCreated(function() {
 	      //google.maps.event.addListener(searchBox, 'places_changed', function() {
 	      searchBox.addListener('places_changed', function(){
 	      	console.log("places_changed");
+					if (Session.get("follow")){
+						Session.setPersistent("follow", false);
+        		$("#follow-button").removeClass("button-positive");
+        		$("#follow-button").addClass("button-energized");
+        		$("#follow-button").find('span').html("&nbsp;Roaming");
+        		$("#follow-button").find('span').removeClass('ion-navigate');
+        		$("#follow-button").find('span').addClass('ion-earth');
+					}
 
 					if (Session.get('tips')){
 						IonPopup.alert({
@@ -444,6 +447,7 @@ Template.map.onCreated(function() {
 
         var followbutton = document.createElement('a');
         followbutton.className = 'button button-positive';
+				followbutton.id = "follow-button";
         var followIcon = document.createElement('span');
         followIcon.className = "ion-navigate";
         followIcon.innerHTML = "&nbsp;Tracking";
@@ -558,28 +562,6 @@ Template.map.onCreated(function() {
         //controlDiv.appendChild(selectbutton);
       }
 
-
-    function CallButton(controlDiv, map, ride){
-    	controlDiv.className = 'controls';
-        //controlDiv.type = "button";
-        controlDiv.id = "call";
-        //controlDiv.value = 'Call';
-        var icon = document.createElement('span');
-        icon.innerHTML = "Call";
-        icon.className = "glyphicon glyphicon-earphone";
-        icon.setAttribute("aria-hidden", true);
-
-        //controlDiv.value = "Call";
-        controlDiv.appendChild(icon);
-
-        controlDiv.addEventListener('click', function(){
-        	var call = new ridetorowEvents(ride);
-        	call.clickCall();
-        });
-    }
-
-      // Create call button
-       //setUpSearchBox();
     // Create and move the marker when latLng changes.
     self.autorun(function() {
       var latLng = Geolocation.latLng();
