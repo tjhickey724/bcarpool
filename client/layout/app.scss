@@ -1,4 +1,4 @@
-$positive: #DE4F4F;
+$positive: #0070FE;
 $loading-font-size: 22px;
 
 @import '.meteor/local/build/programs/server/assets/packages/meteoric_ionic-sass/ionic';
@@ -31,7 +31,7 @@ $loading-font-size: 22px;
     }
   }
 }
-
+/*
 .popover {
   height: auto;
 }
@@ -41,7 +41,8 @@ $loading-font-size: 22px;
     top: 16px !important;
   }
 }
-
+*/
+/*
 .bar.bar-positive{
   border-color: #0070FE;
   background-color: #0070FE;
@@ -60,7 +61,13 @@ $loading-font-size: 22px;
 .positive, a.positive {
   color: #0070FE;
 }
+*/
 
 .content.overflow-scroll.has-header {
     bottom: 0px !important;
+}
+
+.popover {
+  bottom: 140px;
+  overflow: scroll;
 }

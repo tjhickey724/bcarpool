@@ -1,13 +1,36 @@
 <template name="tripinfo">
-  {{#ionModal title="Riders"}}
-  			{{#if trips}}
-			<ul class="list">
-			{{#each trips}}
-			<div class="item item-divider">
-			</div>
-			{{> tripcell}}
+  {{#ionPopover}}
+  			{{#if driverInfo}}
+			<div class="list">
+        <div class="item item-divider">
+          <span class="ion-person">&nbsp;Driver Name:</span>
+  			</div>
+				<div class="item item-button-right">
+          {{driverInfo.who}}
+          <button class="button button-clear button-positive personInfo" id="{{driverInfo._id}}">
+            <i class="icon ion-ios-information-outline"></i>
+          </button>
+				</div>
+        <div class="item item-divider">
+          <span class="ion-ios-people">&nbsp;Passenger Name:</span>
+  			</div>
+			{{#each psgInfo}}
+				<li class="item item-button-right">
+					{{who}}
+          <button class="button button-clear button-positive personInfo" id="{{_id}}">
+            <i class="icon ion-ios-information-outline"></i>
+          </button>
+				</li>
 			{{/each}}
-			</ul>
+      <div class="item item-divider">
+        <span class="ion-ios-clock">&nbsp;When:</span>
+      </div>
+			<li class="item">
+					<div class="pull right">
+					{{when}}
+					</div>
+			</li>
+    </div>
 			{{else}}
 			  <div class="jumbotron vertical-center">
 			  <div class="text-center">
@@ -15,37 +38,5 @@
 			  </div>
 			  </div>
 			{{/if}}
-  {{/ionModal}}
-</template>
-
-
-<template name="tripcell">
-		<li class="item">
-			<ul class="list">
-				<li class="item">
-					<span class="ion-person">&nbsp;Passenger Name:</span>
-					<div class="pull right">
-					{{name}}
-					</div>
-				</li>
-				<li class="item item-button-right">
-					<span class="ion-ios-telephone">&nbsp;Phone:&nbsp;{{phone}}</span>
-					<a role="button" class="button button-positive" href="tel: {{phone}}">
-				      <i class="icon ion-ios-telephone"></i>
-				    </a>
-				</li>
-				<li class="item">
-					<span class="ion-ios-location">&nbsp;Address:</span>
-					<div class="pull right">
-					{{dest}}
-					</div>
-				</li>
-				<li class="item">
-					<span class="ion-ios-clock">&nbsp;When:</span>
-					<div class="pull right">
-					{{when}}
-					</div>
-				</li>
-			</ul>
-		</li>
+    {{/ionPopover}}
 </template>

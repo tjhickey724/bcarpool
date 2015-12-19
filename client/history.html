@@ -24,18 +24,38 @@
 			</ul>
 	{{/ionContent}}
   {{/ionView}}
-	
+
 </template>
 
 <template name="historycell">
 	<li class="item">
 			<ul class="list">
+				<div class="item item-divider">
+          <span class="ion-person">&nbsp;Driver Name:</span>
+  			</div>
+				<div class="item">
+          {{driver}}
+				</div>
+        <div class="item item-divider">
+          <span class="ion-ios-people">&nbsp;Passenger Name:</span>
+  			</div>
+				{{#each passengers}}
 				<li class="item">
 					<span class="ion-person">&nbsp;Name:</span>
 					<div class="pull right">
-					{{name}}
+					{{.}}
 					</div>
 				</li>
+				{{/each}}
+				<div class="item item-divider">
+					<span class="ion-ios-clock">&nbsp;When:</span>
+				</div>
+				<li class="item">
+						<div class="pull right">
+						{{when}}
+						</div>
+				</li>
+				<!--
 				<li class="item item-button-right">
 					<span class="ion-person-stalker">&nbsp;Role:</span>
 					<div class="pull right">
@@ -60,6 +80,7 @@
 					{{when}}
 					</div>
 				</li>
+			-->
 				<li class="item">
 					<button class="button button-block button-assertive icon-left ion-ios-trash delhist">Delete</button>
 				</li>

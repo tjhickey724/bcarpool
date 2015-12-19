@@ -1,4 +1,4 @@
-Meteor.startup(function() { 
+Meteor.startup(function() {
   //Geolocations._ensureIndex({loc: "2dsphere"})
 });
 
@@ -16,33 +16,24 @@ if (Meteor.isServer) {
 	   		]}, {uid: this.userId}]});
   	} else {
   		return []
-  	}	
+  	}
   });
 
    Meteor.publish("requests", function () {
-    return Requests.find({$or: 
-    		[{senderId: this.userId}, 
+    return Requests.find({$or:
+    		[{senderId: this.userId},
     		{receiverId: this.userId}]
     	});
   });
 
-   Meteor.publish("statuses", function () {
-    return Statuses.find({$or: 
-    		[{driverId: this.userId}, 
-    		{riderId: this.userId}]
-    	});
-  });
-
    Meteor.publish("trips", function () {
-    return Trips.find({$or: 
-    		[{uid: this.userId}, 
-    		{partnerId: this.userId}]});
+    return Trips.find({$or:
+    		[{driverId: this.userId},
+    		{passengerIds: {$in: [this.userId] }}]});
   });
 
    Meteor.publish("historys", function () {
-    return Historys.find({$or: 
-    		[{uid: this.userId}, 
-    		{partnerId: this.userId}]});
+    return Historys.find({uid: this.userId});
   });
 
    Meteor.publish("geolocations", function (som) {
@@ -62,7 +53,7 @@ if (Meteor.isServer) {
 	   	var rides = RideInfo.find({$and:[
 	   		{status1: {$ne: self.status1}},
 	   		{direction: self.direction}
-	   		]},{});   	
+	   		]},{});
 	   	rides.forEach(function(ride, index){
 	   		uids.push(ride.uid);
 	   	});
@@ -85,6 +76,12 @@ Meteor.methods({
 	    }
 		return Destinations.findOne({uid: userId}, {});
 	},
+	getTrip: function (driverId){
+		if (! Meteor.userId()) {
+	       throw new Meteor.Error("not-authorized");
+	    }
+	    return Trips.findOne({driverId: driverId}, {});
+	},
     updateGeoloc: function (geoloc) {
       // Make sure the user is logged in before inserting a task
       if (! Meteor.userId()) {
@@ -98,7 +95,7 @@ Meteor.methods({
 			//Geolocations.update({_id: "h7jbTPQebyweWZQq3"}, {$set: {uid: "o7SXY5X5qKxx5YE7K", loc:{type: "Point", coordinates:[42.3, -71.1]}}});
 		  } else {
 			  geolocId = Geolocations.insert(geoloc);
-			
+
 		  }
 	  return geolocId;
 	 },
@@ -107,7 +104,7 @@ Meteor.methods({
 	        throw new Meteor.Error("not-authorized");
 	      }
 	     var destId;
-	 	if (typeof Destinations.findOne({uid: Meteor.userId()}, {}) != "undefined" ) { 
+	 	if (typeof Destinations.findOne({uid: Meteor.userId()}, {}) != "undefined" ) {
 	          var dest = Destinations.findOne({uid: Meteor.userId()}, {});
 	          destId = dest._id;
 	          Destinations.update({_id: dest._id}, {$set: destination});
@@ -122,6 +119,12 @@ Meteor.methods({
 	      }
 	     RideInfo.update({_id:id}, {$set:ride});
 	     return id;
+	 },
+	 updateTrip: function(id, trip){
+	 	if (! Meteor.userId()) {
+	        throw new Meteor.Error("not-authorized");
+	      }
+	      Trips.update({_id:id}, {$set:trip});
 	 },
 	 checkAndUpdateRideInfo: function (ride) {
 	 	if (! Meteor.userId()) {
@@ -148,7 +151,7 @@ Meteor.methods({
 	        throw new Meteor.Error("not-authorized");
 	      }
 	     var reqId = Requests.insert(request);
-	     return reqId; 
+	     return reqId;
 	 },
 	 insertTrip: function (trip) {
 	 	if (! Meteor.userId()) {
@@ -187,6 +190,13 @@ Meteor.methods({
     	}
 
 	 },
+   removeRideInfo: function(id) {
+     if (! Meteor.userId()) {
+ 	        throw new Meteor.Error("not-authorized");
+ 	    }
+      RideInfo.remove(id);
+      return "success";
+   },
 	 removeGeoloc: function (id) {
 	 	if (! Meteor.userId()) {
 	        throw new Meteor.Error("not-authorized");
