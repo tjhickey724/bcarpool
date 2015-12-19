@@ -180,7 +180,6 @@ Template.map.onCreated(function() {
   GoogleMaps.ready('map', function(map) {
 		IonLoading.hide();
     var locmarkers = [];
-    var destpins = [];
     var infowindow = new google.maps.InfoWindow({
                   content: "holding..."
                 });
@@ -218,11 +217,6 @@ Template.map.onCreated(function() {
    	map.instance.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(listButtonGroupDiv);
 
 
-    if (Session.get("direction") == "from"){
-    	dropDestPins();
-    }
-    //dropLocMarkers();
-
     RideInfo.find().observeChanges({
     	added: function(id, object) {
     		console.log("ride added");
@@ -242,23 +236,14 @@ Template.map.onCreated(function() {
 			    		if (geo != undefined) {
 			    			dropSingleLocMarker(geo._id, geo);
 			    		}
-			    		if (dest != undefined) {
-			    			dropSingleDestPin(dest._id, dest);
-			    		}
 			    	} else {
 			    		if (geo != undefined) {
 			    			removeLocMarker(geo._id);
-			    		}
-			    		if (dest != undefined) {
-			    			removeDestPin(dest._id);
 			    		}
 			    	}
 			    } else {
 			    	if (geo != undefined) {
 			    		removeLocMarker(geo._id);
-			    	}
-			    	if (dest != undefined) {
-			    		removeDestPin(dest._id);
 			    	}
 			    }
     		}
@@ -305,118 +290,6 @@ Template.map.onCreated(function() {
 		}
 	});
 
-	Destinations.find().observeChanges({
-		added: function(id, dest){ /* drop destpins */
-			//dropSingleDestPin(id, dest);
-		},
-		removed: function(id){ /* remove destpin */
-			removeDestPin(id);
-		}
-	});
-
-
-	function dropSingleDestPin(id, dest){
-
-		var ride = RideInfo.findOne({uid: dest.uid}, {});
-			console.log(dest.destGeoloc);
-					var destpin = new google.maps.Marker({
-			                position: {lat: dest.destGeoloc.coordinates[0], lng: dest.destGeoloc.coordinates[1]},
-			                map: map.instance,
-			                animation: google.maps.Animation.DROP,
-			                ride_id: ride._id,
-			                _id: id,
-			                icon: '/images/beachflag.png',
-			                role: ride.status1,
-			                html:'<p>'+dest.destAddress+'</p>'
-			              });
-					destpins.push(destpin);
-					addEventsForDestpin(destpin);
-
-	}
-
-
-	function dropDestPins(){
-      	  clearDestPins();
-
-	      var dests = Destinations.find().fetch();
-	      dests.forEach(function(dest, index){
-	        var ride = RideInfo.findOne({uid: Meteor.userId()}, {});
-	        if(dest.uid != Meteor.userId()){
-	          if (Session.get("role") == "rider"){
-	            if (ride.status1 == "driver"){
-	              destpins.push(new google.maps.Marker({
-	                position: {lat: dest.destGeoloc.coordinates[0], lng: dest.destGeoloc.coordinates[1]},
-	                map: map.instance,
-	                animation: google.maps.Animation.DROP,
-	                ride_id: ride._id,
-	                _id: dest._id,
-	                icon: '/images/beachflag.png',
-	                role: ride.status1,
-	                html:'<p>'+dest.destAddress+'</p>'
-	              }));
-	            }
-	          } else {
-	            if (ride.status1 == "rider"){
-	              destpins.push(new google.maps.Marker({
-	                position: {lat: dest.destGeoloc.coordinates[0], lng: dest.destGeoloc.coordinates[1]},
-	                map: map.instance,
-	                animation: google.maps.Animation.DROP,
-	                ride_id: ride._id,
-	                _id: dest._id,
-	                icon: '/images/beachflag.png',
-	                role: ride.status1,
-	                html:'<p>'+dest.destAddress+'</p>'
-	              }));
-	            }
-	          }
-	        } else {
-	        	if (dest.destGeoloc != null) {
-			          destpins.push(new google.maps.Marker({
-			            position: {lat: dest.destGeoloc.coordinates[0], lng: dest.destGeoloc.coordinates[1]},
-			            map: map.instance,
-			            animation: google.maps.Animation.DROP,
-			            ride_id: ride._id,
-			            _id: dest._id,
-			            icon: '/images/beachflag.png',
-			            role: "self",
-			            html:'<p>'+dest.destAddress+'</p>',
-			            label: "M"
-			          }));
-			     }
-	        }
-	      });
-		addEventsForDestpins();
-      }
-
-      function addEventsForDestpins(){
-      	destpins.forEach(function(destpin, index){
-      		addEventsForDestpin(destpin);
-	      });
-      }
-
-      function addEventsForDestpin(destpin){
-      	google.maps.event.addListener(destpin, 'click', function(){
-	          infowindow.setContent(destpin.html);
-	          infowindow.open(map.instance, destpin);
-	        });
-      }
-
-      function removeDestPin(id){
-      	for (i = 0; i < destpins.length; i++) {
-      		if(destpins[i]._id == id){
-				destpins[i].setMap(null);
-				break;
-			}
-      	}
-      }
-
-
-      function clearDestPins() {
-        for (var i = 0; i < destpins.length; i++) {
-          destpins[i].setMap(null);
-        }
-        destpins = [];
-      }
 
       function dropSingleLocMarker(id, location) {
 			var ride = RideInfo.findOne({uid: location.uid}, {});
@@ -432,62 +305,6 @@ Template.map.onCreated(function() {
 			addEventsForLocMarker(locmarker);
 		}
 
-
-      function dropLocMarkers() {
-        clearLocMarkers();
-        var totalTimeOut = 0;
-        for (var i = 0; i < locations.length; i++) {
-          totalTimeOut += i*200;
-          addLocMarkersWithTimeout(locations[i], i+1, i * 200);
-        }
-        window.setTimeout(function(){
-          addEventsForLocMarkers();
-        }, totalTimeOut);
-      }
-      // If the marker doesn't yet exist, create it.
-      function addLocMarkersWithTimeout(location, labelindex, timeout) {
-        //console.log(titleinfo);
-        window.setTimeout(function() {
-          if (Session.get("role") == "rider"){
-            if(info[labelindex-1].role == "driver" || info[labelindex-1].isSelf){
-                locmarkers.push(new google.maps.Marker({
-                position: {lat: location.loc.coordinates[0], lng: location.loc.coordinates[1]},
-                animation: google.maps.Animation.DROP,
-                map: map.instance,
-                role: info[labelindex-1].role,
-                isSelf: info[labelindex-1].isSelf,
-                _id: location._id,
-                label: ""+info[labelindex-1].ride.who,
-                ride: info[labelindex-1].ride,
-                //html: '<div id="infowindow'+labelindex+'>'+info[labelindex-1]+'</div>'
-                html: info[labelindex-1].html
-              }));
-          }
-        } else {
-          if(info[labelindex-1].role == "rider" || info[labelindex-1].isSelf){
-                locmarkers.push(new google.maps.Marker({
-                position: {lat: location.loc.coordinates[0], lng: location.loc.coordinates[1]},
-                animation: google.maps.Animation.DROP,
-                map: map.instance,
-                role: info[labelindex-1].role,
-                isSelf: info[labelindex-1].isSelf,
-                _id: location._id,
-                label: ""+info[labelindex-1].ride.who,
-                ride: info[labelindex-1].ride,
-                //html: '<div id="infowindow'+labelindex+'>'+info[labelindex-1]+'</div>'
-                html: info[labelindex-1].html
-              }));
-          }
-        }
-        }, timeout);
-      }
-
-
-      function addEventsForLocMarkers(){
-          locmarkers.forEach(function(marker, index){
-          	addEventsForLocMarker(marker);
-          });
-      }
 
       function addEventsForLocMarker(marker){
       	google.maps.event.addListener(marker, 'click', function(){
@@ -505,22 +322,6 @@ Template.map.onCreated(function() {
 				break;
 			}
       	}
-      }
-
-      function remainLocMarkersByRole(role){
-      	for (i = 0; i < locmarkers.length; i++) {
-      		if(locmarkers[i].role != role){
-				locmarkers[i].setMap(null);
-				break;
-			}
-      	}
-      }
-
-      function clearLocMarkers() {
-        for (var i = 0; i < locmarkers.length; i++) {
-          locmarkers[i].setMap(null);
-        }
-        locmarkers = [];
       }
 
 
