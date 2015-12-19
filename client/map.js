@@ -190,6 +190,13 @@ Template.map.onCreated(function() {
     	$("#pac-input").prop("disabled", true);
     } else {
     	$("#pac-input").prop("disabled", false);
+			if (Session.get('tips')){
+				IonPopup.alert({
+						title: 'Attention',
+						template: "<p>if you're on mobile, please press <strong>Enter key</strong> on the Keyboard when done typing Destination Address;)</p> <p>You can turn this off in <strong>settings</strong>.</p>",
+						okText: 'Ok'
+					});
+			}
     }
     //$("#pac-input").attr('data-tap-disabled', true);
     /*
@@ -538,7 +545,7 @@ Template.map.onCreated(function() {
 					if (Session.get('tips')){
 						IonPopup.alert({
 								title: 'Tips',
-								template: 'Press the marker to confirm destination ;)',
+								template: 'Press the <strong>marker</strong> to confirm destination ;)',
 								okText: 'Ok'
 							});
 					}

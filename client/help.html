@@ -1,0 +1,34 @@
+<template name="help">
+	{{#contentFor "headerButtonLeft"}}
+    {{>ionNavBackButton path="welcome"}}
+  {{/contentFor}}
+
+  {{#contentFor "headerTitle"}}
+    <h1 class="title">Help</h1>
+  {{/contentFor}}
+
+  {{#ionView}}
+    {{#ionContent}}
+    <div class="card">
+      <div class="item item-text-wrap">
+      <p>
+      If you're on <strong>desktop</strong>, <strong>Chrome</strong> browser is recommended, this software does not support Firefox.
+      </p>
+      <p>
+      If you're on <strong>mobile</strong>, <strong>Safari</strong> browser is recommended.
+      </p>
+      <p>
+      The software might have problem if you don't use the recommended browser.
+      </p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="item item-text-wrap">
+      <p>
+        If you have any other problem or report issues, please contact me at <strong>zhongqil@brandeis.edu</strong>
+      </p>
+      </div>
+    </div>
+	   {{/ionContent}}
+  {{/ionView}}
+</template>
