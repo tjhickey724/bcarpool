@@ -20,6 +20,6 @@ Template.personinfo.helpers({
     }
   },
   when: function () {
-    return res.when;
+    return moment(res.when).format('llll');;
   }
 });

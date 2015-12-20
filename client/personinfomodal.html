@@ -1,29 +1,32 @@
 <template name="personinfo">
   {{#ionModal title="Personal Info"}}
   			<ul class="list">
+          <div class="item item-divider">
+            <span class="ion-person">&nbsp;Name:</span>
+    			</div>
   				<li class="item">
-  					<span class="ion-person">&nbsp;Name:</span>
-  					<div class="pull right">
   					{{name}}
-  					</div>
   				</li>
+          <div class="item item-divider">
+            <span class="ion-ios-telephone">&nbsp;Phone:</span>
+    			</div>
   				<li class="item item-button-right">
-  					<span class="ion-ios-telephone">&nbsp;Phone:&nbsp;{{phone}}</span>
+            {{phone}}
   					<a role="button" class="button button-positive" href="tel: {{phone}}">
   				      <i class="icon ion-ios-telephone"></i>
   				    </a>
   				</li>
+          <div class="item item-divider">
+            <span class="ion-ios-location">&nbsp;Address:</span>
+    			</div>
   				<li class="item">
-  					<span class="ion-ios-location">&nbsp;Address:</span>
-  					<div class="pull right">
   					{{dest}}
-  					</div>
   				</li>
+          <div class="item item-divider">
+            <span class="ion-ios-clock">&nbsp;When:</span>
+    			</div>
   				<li class="item">
-  					<span class="ion-ios-clock">&nbsp;When:</span>
-  					<div class="pull right">
   					{{when}}
-  					</div>
   				</li>
   			</ul>
     {{/ionModal}}
